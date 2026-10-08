@@ -1,0 +1,42 @@
+{
+  "title": {
+    "value": "",
+    "tag": "Missing",
+    "agreement": 0.0
+  },
+  "material": {
+    "value": "aluminium",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "box",
+    "tag": "Inferred",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "length_mm": {
+        "value": 775.0,
+        "agreement": 0.3
+      },
+      "width_mm": {
+        "value": 600.0,
+        "agreement": 0.3
+      },
+      "thickness_mm": {
+        "value": 20.0,
+        "agreement": 0.3
+      },
+      "height_mm": {
+        "value": 20.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-003",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

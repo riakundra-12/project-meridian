@@ -1,0 +1,14 @@
+{
+  "title": "Galvo Mount Side x2",
+  "title_tag": "Visible",
+  "material": "7075-T6, Plate (SS)",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "thickness_mm": 10.0,
+    "width_mm": 95.0,
+    "height_mm": 120.0
+  },
+  "dimensions_tag": "Visible"
+}

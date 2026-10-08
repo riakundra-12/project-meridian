@@ -11325,10 +11325,10 @@
       "file_path": "dataset/drawings/D-004.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Top Plate",
+      "material": "3 mm non-magnetic stainless",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-005",
@@ -11337,10 +11337,10 @@
       "file_path": "dataset/drawings/D-005.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
-      "bom_match": null,
-      "match_status": null
+      "title": "Window Clamp Frame",
+      "material": "6061 Alloy",
+      "bom_match": "Window Frame",
+      "match_status": "unverified"
     },
     {
       "drawing_id": "D-006",
@@ -11350,7 +11350,7 @@
       "distribution": "clean",
       "pages": 1,
       "title": null,
-      "material": null,
+      "material": "Non-magnetic stainless 3mm (or thicker)",
       "bom_match": null,
       "match_status": null
     },
@@ -11361,10 +11361,10 @@
       "file_path": "dataset/drawings/D-007.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Dispenser Shaft v6",
+      "material": "Aluminium",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-008",
@@ -11373,10 +11373,10 @@
       "file_path": "dataset/drawings/D-008.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
+      "title": "Powder Bracket",
       "material": null,
-      "bom_match": null,
-      "match_status": null
+      "bom_match": "Powder stepper bracket",
+      "match_status": "unverified"
     },
     {
       "drawing_id": "D-009",
@@ -11397,10 +11397,10 @@
       "file_path": "dataset/drawings/D-010.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
-      "bom_match": null,
-      "match_status": null
+      "title": "Motor Plate",
+      "material": "2mm non-magnetic stainless",
+      "bom_match": "Motor plate",
+      "match_status": "unverified"
     },
     {
       "drawing_id": "D-011",
@@ -11433,10 +11433,10 @@
       "file_path": "dataset/drawings/D-013.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
-      "bom_match": null,
-      "match_status": null
+      "title": "Recoater Plate",
+      "material": "3.3315 (EN-AW 5005)",
+      "bom_match": "Recoater Blade",
+      "match_status": "unverified"
     },
     {
       "drawing_id": "D-014",
@@ -11457,10 +11457,10 @@
       "file_path": "dataset/drawings/D-015.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Silikone Wiper",
+      "material": "Silicon Rubber",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-016",
@@ -11469,10 +11469,10 @@
       "file_path": "dataset/drawings/D-016.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Galvo Bundplade",
+      "material": "7075-T6, Plate (SS)",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-017",
@@ -11481,10 +11481,10 @@
       "file_path": "dataset/drawings/D-017.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
+      "title": "Galvo Montage Plade",
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-018",
@@ -11493,10 +11493,10 @@
       "file_path": "dataset/drawings/D-018.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Galvo Mount Side x2",
+      "material": "7075-T6, Plate (SS)",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-019",
@@ -11505,10 +11505,10 @@
       "file_path": "dataset/drawings/D-019.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "1mm silicone pakning",
+      "material": "Silicon Rubber",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-020",
@@ -11529,10 +11529,10 @@
       "file_path": "dataset/drawings/D-021.pdf",
       "distribution": "clean",
       "pages": 2,
-      "title": null,
-      "material": null,
+      "title": "Blower Outlet",
+      "material": "Non-magnetic stainless",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-022",
@@ -11565,10 +11565,10 @@
       "file_path": "dataset/drawings/D-024.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "ByggeBase",
+      "material": "3.3315 (EN-AW 5005)",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-025",
@@ -11601,10 +11601,10 @@
       "file_path": "dataset/drawings/D-027.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Cylinder Spænd Ring",
+      "material": "6063-T6",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-028",
@@ -11613,10 +11613,10 @@
       "file_path": "dataset/drawings/D-028.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Varmeelement Plade",
+      "material": "3.3315 (EN-AW 5005)",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-029",
@@ -11625,10 +11625,10 @@
       "file_path": "dataset/drawings/D-029.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Z-axis BottomPlate",
+      "material": "Aluminium",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-030",

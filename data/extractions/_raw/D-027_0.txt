@@ -1,0 +1,14 @@
+{
+  "title": "Cylinder Spænd Ring",
+  "title_tag": "Visible",
+  "material": "6063-T6",
+  "material_tag": "Visible",
+  "primitive_type": "ring",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "outer_diameter_mm": 330,
+    "inner_diameter_mm": 264,
+    "thickness_mm": 15
+  },
+  "dimensions_tag": "Visible"
+}

@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "1mm silicone pakning",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "Silicon Rubber",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "ring",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 1.0,
+        "agreement": 1.0
+      },
+      "inner_diameter_mm": {
+        "value": 118.0,
+        "agreement": 1.0
+      },
+      "outer_diameter_mm": {
+        "value": 141.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-019",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

@@ -1,0 +1,25 @@
+{
+  "title": {
+    "value": "Powder canister",
+    "tag": "Inferred",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "Non-magnetic stainless",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {},
+    "tag": "Missing"
+  },
+  "_drawing_id": "D-009",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

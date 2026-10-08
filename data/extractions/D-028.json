@@ -1,0 +1,30 @@
+{
+  "title": {
+    "value": "Varmeelement Plade",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "3.3315 (EN-AW 5005)",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 2.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-028",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

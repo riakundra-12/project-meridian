@@ -1,0 +1,14 @@
+{
+  "title": "Recoater Plate",
+  "title_tag": "Visible",
+  "material": "3.3315 (EN-AW 5005)",
+  "material_tag": "Visible",
+  "primitive_type": "box",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "length_mm": 270.0,
+    "width_mm": 25.0,
+    "thickness_mm": 6.0
+  },
+  "dimensions_tag": "Visible"
+}

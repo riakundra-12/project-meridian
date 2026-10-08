@@ -1,0 +1,1 @@
+{"title": "Canister Wall", "title_tag": "Visible", "material": "Non-magnetic stainless 3mm (or thicker)", "material_tag": "Visible", "primitive_type": "other", "primitive_type_tag": "Visible", "dimensions": {}, "dimensions_tag": "Missing"}

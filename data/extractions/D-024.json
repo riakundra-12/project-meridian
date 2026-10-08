@@ -1,0 +1,34 @@
+{
+  "title": {
+    "value": "ByggeBase",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "3.3315 (EN-AW 5005)",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "cylinder",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "outer_diameter_mm": {
+        "value": 250.0,
+        "agreement": 1.0
+      },
+      "height_mm": {
+        "value": 40.5,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-024",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

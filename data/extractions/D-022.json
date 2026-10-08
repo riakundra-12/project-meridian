@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "Inlet Box",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "Stainless",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "box",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "width_mm": {
+        "value": 120.0,
+        "agreement": 0.3
+      },
+      "height_mm": {
+        "value": 62.5,
+        "agreement": 0.3
+      },
+      "length_mm": {
+        "value": 200.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-022",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

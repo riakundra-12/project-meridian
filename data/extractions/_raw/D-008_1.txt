@@ -1,0 +1,1 @@
+{"title":"Powder Bracket","title_tag":"Visible","material":"2-3mm non-magnetic stainless.","material_tag":"Visible","primitive_type":"other","primitive_type_tag":"Visible","dimensions":{"length_mm":349.0,"width_mm":134.0,"height_mm":61.8},"dimensions_tag":"Visible"}

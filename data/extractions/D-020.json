@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "SealRing",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "6061 Alloy",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "ring",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 10.0,
+        "agreement": 0.3
+      },
+      "inner_diameter_mm": {
+        "value": 118.59999999999998,
+        "agreement": 0.3
+      },
+      "outer_diameter_mm": {
+        "value": 141.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-020",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

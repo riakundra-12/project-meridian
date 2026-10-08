@@ -1,0 +1,42 @@
+{
+  "title": {
+    "value": "Motor Plate",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "2mm non-magnetic stainless",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 2.0,
+        "agreement": 0.3333333333333333
+      },
+      "width_mm": {
+        "value": 70.0,
+        "agreement": 0.3333333333333333
+      },
+      "height_mm": {
+        "value": 30.0,
+        "agreement": 0.3333333333333333
+      },
+      "length_mm": {
+        "value": 107.0,
+        "agreement": 0.3333333333333333
+      }
+    },
+    "tag": "Missing"
+  },
+  "_drawing_id": "D-010",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

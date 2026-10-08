@@ -1,0 +1,13 @@
+{
+  "title": "Recoater Arm",
+  "title_tag": "Visible",
+  "material": "7075-T6",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "width_mm": 25.0,
+    "thickness_mm": 12.0
+  },
+  "dimensions_tag": "Visible"
+}

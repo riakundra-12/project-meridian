@@ -1,0 +1,42 @@
+{
+  "title": {
+    "value": "Recoater Arm",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "7075-T6, Plate (SS)",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 12.0,
+        "agreement": 0.3
+      },
+      "total_height_mm": {
+        "value": 195.0,
+        "agreement": 0.3
+      },
+      "width_mm": {
+        "value": 25.0,
+        "agreement": 0.3
+      },
+      "total_length_mm": {
+        "value": 348.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-011",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

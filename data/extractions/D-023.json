@@ -1,0 +1,34 @@
+{
+  "title": {
+    "value": "ByggeCylinder",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "EN AW-6082",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "cylinder",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "outer_diameter_mm": {
+        "value": 280.0,
+        "agreement": 0.3
+      },
+      "height_mm": {
+        "value": 280.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-023",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}

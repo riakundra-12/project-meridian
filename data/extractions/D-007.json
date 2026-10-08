@@ -1,0 +1,34 @@
+{
+  "title": {
+    "value": "Dispenser Shaft v6",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "Aluminium",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "cylinder",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "outer_diameter_mm": {
+        "value": 25.0,
+        "agreement": 1.0
+      },
+      "height_mm": {
+        "value": 336.1,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-007",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

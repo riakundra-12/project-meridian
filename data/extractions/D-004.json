@@ -1,0 +1,50 @@
+{
+  "title": {
+    "value": "Top Plate",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "3 mm non-magnetic stainless",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "box",
+    "tag": "Inferred",
+    "agreement": 0.6666666666666666
+  },
+  "dimensions": {
+    "value": {
+      "width_mm": {
+        "value": 650.0,
+        "agreement": 1.0
+      },
+      "flange_height_mm": {
+        "value": 25.0,
+        "agreement": 0.3333333333333333
+      },
+      "inner_length_mm": {
+        "value": 775.0,
+        "agreement": 0.3333333333333333
+      },
+      "length_mm": {
+        "value": 775.0,
+        "agreement": 0.6666666666666666
+      },
+      "height_mm": {
+        "value": 25.0,
+        "agreement": 0.6666666666666666
+      },
+      "thickness_mm": {
+        "value": 3.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-004",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

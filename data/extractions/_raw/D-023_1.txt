@@ -1,0 +1,13 @@
+{
+  "title": "ByggeCylinder",
+  "title_tag": "Visible",
+  "material": "EN AW-6082",
+  "material_tag": "Visible",
+  "primitive_type": "cylinder",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "outer_diameter_mm": 280,
+    "height_mm": 280
+  },
+  "dimensions_tag": "Visible"
+}

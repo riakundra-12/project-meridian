@@ -1,0 +1,14 @@
+{
+  "title": "Inlet Box",
+  "title_tag": "Visible",
+  "material": "Stainless",
+  "material_tag": "Visible",
+  "primitive_type": "box",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {
+    "length_mm": 200,
+    "width_mm": 120,
+    "height_mm": 62.5
+  },
+  "dimensions_tag": "Visible"
+}

@@ -1,0 +1,34 @@
+{
+  "title": {
+    "value": "Galvo Bundplade",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "7075-T6, Plate (SS)",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 10.0,
+        "agreement": 1.0
+      },
+      "width_mm": {
+        "value": 200.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-016",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

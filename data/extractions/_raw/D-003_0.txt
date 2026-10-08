@@ -1,0 +1,1 @@
+{"title": "", "title_tag": "Missing", "material": "aluminium", "material_tag": "Visible", "primitive_type": "box", "primitive_type_tag": "Inferred", "dimensions": {"length_mm": 775.0, "width_mm": 600.0, "thickness_mm": 20.0}, "dimensions_tag": "Visible"}

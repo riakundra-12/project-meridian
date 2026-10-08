@@ -1,0 +1,18 @@
+{
+  "title": "Window Clamp Frame",
+  "title_tag": "Visible",
+  "material": "6061 Alloy",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "outer_length_mm": 323.0,
+    "outer_width_mm": 236.0,
+    "thickness_mm": 8.2,
+    "inner_pocket_length_mm": 297.2,
+    "inner_pocket_width_mm": 210.2,
+    "inner_opening_length_mm": 286.7,
+    "inner_opening_width_mm": 199.7
+  },
+  "dimensions_tag": "Visible"
+}

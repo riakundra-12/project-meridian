@@ -1,0 +1,25 @@
+{
+  "title": {
+    "value": "Blower Outlet",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "Non-magnetic stainless",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {},
+    "tag": "Missing"
+  },
+  "_drawing_id": "D-021",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

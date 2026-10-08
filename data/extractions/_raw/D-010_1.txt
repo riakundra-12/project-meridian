@@ -1,0 +1,15 @@
+{
+  "title": "Motor Plate",
+  "title_tag": "Visible",
+  "material": "2mm non-magnetic stainless",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {
+    "length_mm": 107.0,
+    "width_mm": 70.0,
+    "height_mm": 30.0,
+    "thickness_mm": 2.0
+  },
+  "dimensions_tag": "Visible"
+}

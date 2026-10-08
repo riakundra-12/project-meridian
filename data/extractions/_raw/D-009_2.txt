@@ -1,0 +1,10 @@
+{
+  "title": "Powder canister",
+  "title_tag": "Inferred",
+  "material": "Non-magnetic stainless",
+  "material_tag": "Inferred",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {},
+  "dimensions_tag": "Missing"
+}

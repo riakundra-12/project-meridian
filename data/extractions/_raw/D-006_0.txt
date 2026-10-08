@@ -1,0 +1,10 @@
+{
+  "title": "Canister Wall Left and right side, one of each.",
+  "title_tag": "Visible",
+  "material": "Non-magnetic stainless 3mm (or thicker)",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {},
+  "dimensions_tag": "Missing"
+}

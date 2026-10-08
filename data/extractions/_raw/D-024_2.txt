@@ -1,0 +1,13 @@
+{
+  "title": "ByggeBase",
+  "title_tag": "Visible",
+  "material": "3.3315 (EN-AW 5005)",
+  "material_tag": "Visible",
+  "primitive_type": "cylinder",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "outer_diameter_mm": 250,
+    "height_mm": 40.5
+  },
+  "dimensions_tag": "Visible"
+}

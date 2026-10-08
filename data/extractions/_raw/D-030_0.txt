@@ -1,0 +1,12 @@
+{
+  "title": "Z-axis MotorPlate",
+  "title_tag": "Visible",
+  "material": "Aluminium",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "thickness_mm": 4.0
+  },
+  "dimensions_tag": "Visible"
+}

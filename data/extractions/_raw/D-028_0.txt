@@ -1,0 +1,12 @@
+{
+  "title": "Varmeelement Plade",
+  "title_tag": "Visible",
+  "material": "3.3315 (EN-AW 5005)",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "thickness_mm": 2.0
+  },
+  "dimensions_tag": "Visible"
+}

@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "Powder Bracket",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "2-3mm non-magnetic stainless",
+    "tag": "Inferred",
+    "agreement": 0.6666666666666666
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Inferred",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "width_mm": {
+        "value": 134.0,
+        "agreement": 0.3333333333333333
+      },
+      "height_mm": {
+        "value": 61.8,
+        "agreement": 0.3333333333333333
+      },
+      "length_mm": {
+        "value": 349.0,
+        "agreement": 0.3333333333333333
+      }
+    },
+    "tag": "Missing"
+  },
+  "_drawing_id": "D-008",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

@@ -1,0 +1,1 @@
+{"title":"Powder Bracket","title_tag":"Visible","material":"2-3mm non-magnetic stainless","material_tag":"Inferred","primitive_type":"other","primitive_type_tag":"Inferred","dimensions":{},"dimensions_tag":"Missing"}

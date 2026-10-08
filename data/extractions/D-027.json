@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "Cylinder Spænd Ring",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "6063-T6",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "ring",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 15.0,
+        "agreement": 1.0
+      },
+      "inner_diameter_mm": {
+        "value": 264.0,
+        "agreement": 1.0
+      },
+      "outer_diameter_mm": {
+        "value": 330.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-027",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

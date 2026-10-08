@@ -1,0 +1,15 @@
+{
+  "title": "Top Plate",
+  "title_tag": "Visible",
+  "material": "3 mm non-magnetic stainless",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "thickness_mm": 3.0,
+    "inner_length_mm": 775.0,
+    "width_mm": 650.0,
+    "flange_height_mm": 25.0
+  },
+  "dimensions_tag": "Visible"
+}

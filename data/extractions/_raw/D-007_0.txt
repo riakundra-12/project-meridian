@@ -1,0 +1,13 @@
+{
+  "title": "Dispenser Shaft v6",
+  "title_tag": "Visible",
+  "material": "Aluminium",
+  "material_tag": "Visible",
+  "primitive_type": "cylinder",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {
+    "outer_diameter_mm": 25.0,
+    "height_mm": 336.1
+  },
+  "dimensions_tag": "Visible"
+}

@@ -1,0 +1,30 @@
+{
+  "title": {
+    "value": "Z-axis BottomPlate",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "Aluminium",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "other",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 15.0,
+        "agreement": 0.6666666666666666
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-029",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}

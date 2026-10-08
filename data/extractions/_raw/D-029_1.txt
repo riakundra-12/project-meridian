@@ -1,0 +1,12 @@
+{
+  "title": "Z-axis BottomPlate",
+  "title_tag": "Visible",
+  "material": "Aluminium",
+  "material_tag": "Visible",
+  "primitive_type": "other",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "thickness_mm": 15.0
+  },
+  "dimensions_tag": "Visible"
+}

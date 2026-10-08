@@ -1,0 +1,14 @@
+{
+  "title": "Galvo Montage Plade",
+  "title_tag": "Visible",
+  "material": "7075-T6, Alu",
+  "material_tag": "Visible",
+  "primitive_type": "box",
+  "primitive_type_tag": "Visible",
+  "dimensions": {
+    "length_mm": 180,
+    "width_mm": 110,
+    "thickness_mm": 10
+  },
+  "dimensions_tag": "Visible"
+}

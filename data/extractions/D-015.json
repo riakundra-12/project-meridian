@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "Silikone Wiper",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "material": {
+    "value": "Silicon Rubber",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "primitive_type": {
+    "value": "box",
+    "tag": "Visible",
+    "agreement": 1.0
+  },
+  "dimensions": {
+    "value": {
+      "thickness_mm": {
+        "value": 1.0,
+        "agreement": 1.0
+      },
+      "width_mm": {
+        "value": 14.0,
+        "agreement": 1.0
+      },
+      "length_mm": {
+        "value": 270.0,
+        "agreement": 1.0
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-015",
+  "_distribution": "clean",
+  "_forced_low_confidence": false,
+  "_n_runs": 3
+}
