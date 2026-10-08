@@ -36,7 +36,14 @@ def _is_drawing_id(entity_id: str) -> bool:
 def _render(validated_claims: list, model_abstained: bool) -> str:
     if not validated_claims:
         return "I don't have grounded data to answer that."
-    return " ".join(c["statement"] for c in validated_claims)
+    text = " ".join(c["statement"] for c in validated_claims)
+    if model_abstained:
+        # The model itself flagged low confidence even though some claims
+        # independently validated — surface that rather than silently
+        # dropping the model's own signal (caught in review: this parameter
+        # was previously accepted and never read).
+        text += "\n\n_The agent flagged uncertainty on this answer even though the claims above were independently verified._"
+    return text
 
 
 @dataclass

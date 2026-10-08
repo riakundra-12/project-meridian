@@ -10,7 +10,7 @@ Run from the repo root: python -m pytest tests/test_validator.py -v
 
 import pytest
 
-from src.agent.tools import get_part
+from src.agent.tools import get_part, search_parts
 from src.agent.validator import record_grounded_facts, validate_claims
 
 
@@ -134,6 +134,28 @@ def test_cross_entity_citation_fails_even_with_correct_value():
 
     assert validated == []
     assert dropped == 1
+
+
+def test_search_parts_aggregation_claim_validates():
+    """Regression for a real gap caught in review: search_parts used to
+    only return subsystem/type, so a 'which parts use Aluminium' claim
+    citing material had no grounded fact to match -- every such claim was
+    dropped even when correct. search_parts now also matches on material
+    and returns it, so this must validate."""
+    grounded = {}
+    record_grounded_facts(grounded, search_parts("Aluminium"))
+
+    claim = {
+        "statement": "Front Door uses Aluminium.",
+        "entity_id": "Front Door",
+        "field": "material",
+        "value": "Aluminium",
+        "source_ref": "BOM row 9",
+    }
+    validated, dropped = validate_claims([claim], grounded)
+
+    assert validated == [claim]
+    assert dropped == 0
 
 
 def test_stringified_list_value_still_validates():

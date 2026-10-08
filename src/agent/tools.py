@@ -62,18 +62,35 @@ def get_part(part_name: str) -> dict:
 
 
 def search_parts(query: str) -> dict:
+    """Matches on name, subsystem, OR material (case-insensitive substring)
+    so aggregation questions like "which parts use Aluminium" are
+    answerable — not just name/subsystem disambiguation. Returns the common
+    aggregation fields (subsystem, type, material, supplier, cost) per
+    match, not just name/subsystem, so each result is independently
+    citable without a follow-up get_part call per match.
+    """
     knowledge = _load_knowledge()
     q = query.lower()
-    matches = [
-        p
-        for p in knowledge["parts"]
-        if q in p["name"].lower() or (p.get("subsystem") and q in p["subsystem"].lower())
-    ]
+
+    def _matches(p: dict) -> bool:
+        if q in p["name"].lower():
+            return True
+        if p.get("subsystem") and q in p["subsystem"].lower():
+            return True
+        if p.get("material") and q in str(p["material"]).lower():
+            return True
+        return False
+
+    matches = [p for p in knowledge["parts"] if _matches(p)]
     truncated = len(matches) > 10
     results = []
     for p in matches[:10]:
         shape = _apply_corrections_overlay(part_to_shape(p))
-        trimmed = {k: v for k, v in shape["fields"].items() if k in ("subsystem", "type")}
+        trimmed = {
+            k: v
+            for k, v in shape["fields"].items()
+            if k in ("subsystem", "type", "material", "supplier", "cost")
+        }
         results.append({"entity_id": shape["entity_id"], "fields": trimmed})
     return {"count": len(matches), "truncated": truncated, "results": results}
 
@@ -188,17 +205,21 @@ TOOL_SCHEMAS = [
     {
         "name": "search_parts",
         "description": (
-            "Search BOM parts by substring match on name or subsystem "
-            "(case-insensitive). Returns up to 10 lightweight matches "
-            "(name/subsystem/type only) for disambiguation — call get_part "
-            "on a specific name for full cited detail."
+            "Search BOM parts by substring match on name, subsystem, OR "
+            "material (case-insensitive) — use this for aggregation "
+            "questions like 'which parts use X material' or 'which parts "
+            "are in the Y subsystem', not just name disambiguation. Returns "
+            "up to 10 matches, each with subsystem/type/material/supplier/"
+            "cost already included and independently citable — no need to "
+            "call get_part again for these fields. count/truncated tell "
+            "you if there were more than 10 real matches."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Substring to match against part name or subsystem.",
+                    "description": "Substring to match against part name, subsystem, or material.",
                 }
             },
             "required": ["query"],

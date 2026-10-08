@@ -246,6 +246,33 @@ MOCK_SCRIPTS = {
         {"name": "get_drawing", "args": {"drawing_id": "D-001"}},
         {"name": "submit_final_answer", "args": {"claims": [], "abstain": True}},
     ],
+    "aggregation": [
+        {"name": "search_parts", "args": {"query": "Aluminium"}},
+        {
+            "name": "submit_final_answer",
+            "args": {
+                "claims": [
+                    {
+                        "statement": "Front Door uses Aluminium.",
+                        "entity_id": "Front Door",
+                        "field": "material",
+                        "value": "Aluminium",
+                        "source_ref": "BOM row 9",
+                        "confidence": 1.0,
+                    },
+                    {
+                        "statement": "Print Platform uses Aluminium.",
+                        "entity_id": "Print Platform",
+                        "field": "material",
+                        "value": "Aluminium",
+                        "source_ref": "BOM row 11",
+                        "confidence": 1.0,
+                    },
+                ],
+                "abstain": False,
+            },
+        },
+    ],
 }
 
 

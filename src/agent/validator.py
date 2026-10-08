@@ -7,6 +7,7 @@ per-claim (a failing claim is dropped, not the whole turn).
 """
 
 import ast
+import json
 
 
 def _values_equal(claim_value, grounded_value) -> bool:
@@ -18,16 +19,22 @@ def _values_equal(claim_value, grounded_value) -> bool:
     list. That's a real, correct claim wearing the wrong type, not a
     hallucination -- a direct `!=` drops it every time. Still exact
     equality after normalizing, not fuzzy matching: a string claim value is
-    only accepted if it literal_eval's to something structurally identical
-    to the grounded value.
+    only accepted if it parses to something structurally identical to the
+    grounded value. Tries JSON first (Groq/OpenAI-style models are more
+    likely to produce real JSON -- true/null -- than Python repr) then
+    Python literal syntax (observed from Gemini), not just one or the other.
     """
     if claim_value == grounded_value:
         return True
     if isinstance(claim_value, str) and not isinstance(grounded_value, str):
         try:
+            return json.loads(claim_value) == grounded_value
+        except (ValueError, TypeError):
+            pass
+        try:
             return ast.literal_eval(claim_value) == grounded_value
         except (ValueError, SyntaxError):
-            return False
+            pass
     return False
 
 

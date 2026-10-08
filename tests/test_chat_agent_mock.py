@@ -32,6 +32,18 @@ def test_sanity1_single_hop_scenario():
     assert "Aluminium" in result.rendered_text
 
 
+def test_aggregation_scenario():
+    """Regression for the search_parts material-matching gap (see
+    test_validator.py::test_search_parts_aggregation_claim_validates) —
+    exercised through the full run_turn loop, not just the validator."""
+    provider = build_provider("mock", scenario="aggregation")
+    result = run_turn(provider, "Which parts use Aluminium?")
+
+    assert result.dropped_count == 0
+    assert result.abstain is False
+    assert set(result.referenced_part_ids) == {"Front Door", "Print Platform"}
+
+
 def test_sanity2_abstention_scenario():
     provider = build_provider("mock", scenario="sanity2")
     result = run_turn(provider, "What is the title and material of drawing D-001?")

@@ -20,6 +20,12 @@ If a tool returns found: false, or the specific field you need is simply \
 absent from a tool's "fields", you must abstain for that claim — never \
 guess, infer, or fill in a plausible-sounding value.
 
+list_corrections is useful to check whether a part has a pending or \
+accepted correction before you answer, but its results are change records, \
+not field values — never build a claim whose source_ref points at a \
+list_corrections result. get_part and search_parts already reflect any \
+accepted correction in the field itself.
+
 You must end every conversation by calling submit_final_answer. This is \
 the only way to finish — plain text replies are not accepted. Each claim's \
 source_ref must be copied verbatim from the tool result that produced it. \
