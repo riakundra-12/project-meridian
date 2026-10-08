@@ -1,0 +1,37 @@
+{
+  "_comment": "Examples, not a test contract (per CHALLENGE.md). Each one exercises a distinct real capability of the tool-calling agent — swap or add your own.",
+  "questions": [
+    {
+      "question": "Tell me about the Recoater mount block",
+      "demonstrates": "Names a reconstructed part — chat should open D-012's 2D drawing and its orbitable 3D reconstruction in the same turn (CHALLENGE.md's explicit ask: at least one question like this)."
+    },
+    {
+      "question": "What material is the Front Door made of?",
+      "demonstrates": "Single-hop grounded answer, cited to a specific BOM row (BOM row 9)."
+    },
+    {
+      "question": "What does the Front Door interface with, and what subsystem is that other part in?",
+      "demonstrates": "Multi-hop tool chaining — get_interfaces resolves the free-text 'Interface with' cell to a BOM part name, then a second tool call (get_part) fetches that part's subsystem. Both claims cite their own BOM row independently."
+    },
+    {
+      "question": "What is the title and material of drawing D-001?",
+      "demonstrates": "Abstention on an uncurated drawing (26 of 30 drawings have no curated title/material yet) — the agent must say so rather than fabricate a plausible-looking answer."
+    },
+    {
+      "question": "Tell me about the Recoater Linear Plate",
+      "demonstrates": "Conflicting/ambiguous identity evidence — D-014's filename, drawing title, and a similarly-named BOM row don't fully agree, surfaced as an 'unverified' link rather than a confirmed identity."
+    },
+    {
+      "question": "Which parts use Aluminium?",
+      "demonstrates": "Cross-record BOM aggregation, each result cites its own BOM row."
+    },
+    {
+      "question": "What are the recorded costs for parts in the Recoater subsystem?",
+      "demonstrates": "Subsystem-scoped aggregation with temporal caveats (pinned BOM snapshot, not current pricing)."
+    },
+    {
+      "question": "Change the material of Recoater mount block to Stainless steel",
+      "demonstrates": "The one governed correction: creates a pending proposal (handled by a separate, deterministic path from the LLM chat — a write action, not a knowledge query), reviewable in the Correction review panel; the original BOM evidence stays visible even after acceptance."
+    }
+  ]
+}
