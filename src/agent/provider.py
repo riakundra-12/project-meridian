@@ -97,68 +97,16 @@ class GeminiProvider(Provider):
         return history
 
     def _call_model(self, history):
-        import httpx
-        from google.genai import errors
+        from src.agent.gemini_retry import call_with_retry
 
-        max_attempts = 6
-        for attempt in range(1, max_attempts + 1):
-            try:
-                return self._client.models.generate_content(
-                    model=self.model_id,
-                    contents=history["contents"],
-                    config=history["config"],
-                )
-            except (httpx.TimeoutException, httpx.TransportError) as e:
-                # Network-level stall/timeout (now bounded by the client's
-                # own http_options timeout, not infinite) — transient.
-                if attempt == max_attempts:
-                    raise
-                wait_s = min(2 ** attempt, 20)
-                print(f"  [gemini] network error ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
-                time.sleep(wait_s)
-            except errors.ServerError as e:
-                # Transient (e.g. 503 UNAVAILABLE — model overloaded).
-                if attempt == max_attempts:
-                    raise
-                wait_s = min(2 ** attempt, 20)
-                print(f"  [gemini] ServerError ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
-                time.sleep(wait_s)
-            except errors.ClientError as e:
-                # 429 RESOURCE_EXHAUSTED has two very different real causes
-                # that both land here: the per-minute RPM cap (seconds-scale
-                # retryDelay, worth sleeping through) and the free tier's
-                # PER-DAY cap (observed directly: 20 req/day on
-                # gemini-3.8-flash, retryDelay ~2 HOURS). Blindly sleeping
-                # for a server-suggested delay above this ceiling means the
-                # process silently hangs for hours instead of failing fast
-                # with an actionable message — fail fast instead; the
-                # interactive retry loop will never cover a daily quota
-                # outage, only RPM-scale throttling.
-                MAX_SLEEP_S = 60
-                if getattr(e, "code", None) != 429 or attempt == max_attempts:
-                    raise
-                wait_s = self._parse_retry_delay(e) or min(2 ** attempt, 20)
-                if wait_s > MAX_SLEEP_S:
-                    raise RuntimeError(
-                        f"Gemini quota exhausted with a {wait_s:.0f}s suggested "
-                        f"retry delay (> {MAX_SLEEP_S}s ceiling) — this is the "
-                        f"free tier's per-day cap, not per-minute throttling. "
-                        f"Not sleeping through it. Original error: {e}"
-                    ) from e
-                print(f"  [gemini] 429 RESOURCE_EXHAUSTED, retrying in {wait_s:.1f}s (attempt {attempt}/{max_attempts})")
-                time.sleep(wait_s)
-
-    @staticmethod
-    def _parse_retry_delay(client_error) -> Optional[float]:
-        try:
-            details = client_error.details.get("error", {}).get("details", [])
-            for d in details:
-                if d.get("@type", "").endswith("RetryInfo"):
-                    delay = d.get("retryDelay", "")
-                    return float(delay.rstrip("s")) + 1.0  # pad by 1s
-        except Exception:
-            pass
-        return None
+        return call_with_retry(
+            lambda: self._client.models.generate_content(
+                model=self.model_id,
+                contents=history["contents"],
+                config=history["config"],
+            ),
+            label="gemini-chat",
+        )
 
     def generate(self, history) -> ProviderTurn:
         response = self._call_model(history)

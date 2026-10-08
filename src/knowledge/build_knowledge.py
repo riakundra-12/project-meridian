@@ -1,3 +1,4 @@
+import difflib
 import json
 from pathlib import Path
 
@@ -9,6 +10,11 @@ from src.knowledge.curated_drawings import CURATED_DRAWINGS
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_PATH = PROJECT_ROOT / "data" / "knowledge.json"
+EXTRACTIONS_DIR = PROJECT_ROOT / "data" / "extractions"
+
+# NOT pre-blessed -- starting estimate (2-of-3 self-consistency runs
+# agree), not measured against this project's actual disagreement rate.
+AUTO_ACCEPT_THRESHOLD = 0.67
 
 
 def safe_value(value):
@@ -65,32 +71,130 @@ def build_parts():
 
     return parts
 
+def _load_extraction(drawing_id: str):
+    path = EXTRACTIONS_DIR / f"{drawing_id}.json"
+    if not path.exists():
+        return None
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _find_bom_match_candidate(title: str, subsystem: str, bom):
+    """Deterministic name-similarity match against BOM part names. Never
+    promoted to match_status='verified' by this path -- only a human
+    curating CURATED_DRAWINGS can set that; auto matches land as
+    'unverified' (candidate found) or 'unmatched' (no candidate).
+
+    Subsystem-filtered first: short mechanical part names share generic
+    words ("Wall", "Box", "Mount") across unrelated subsystems, so plain
+    string similarity alone is too loose -- found live (D-002 "Left Wall",
+    Box subsystem, false-matched to "Recoater Wall" at cutoff 0.6 before
+    this fix). Falls back to the full BOM only if subsystem filtering
+    leaves nothing to compare against, with a stricter cutoff since that
+    fallback has lost its strongest disambiguating signal.
+    """
+    if not title:
+        return None
+
+    same_subsystem_names = list(bom[bom["Part family"] == subsystem]["Name"]) if subsystem else []
+    if same_subsystem_names:
+        candidates = difflib.get_close_matches(title, same_subsystem_names, n=1, cutoff=0.6)
+        if candidates:
+            return candidates[0]
+
+    candidates = difflib.get_close_matches(title, list(bom["Name"]), n=1, cutoff=0.75)
+    return candidates[0] if candidates else None
+
+
+def _file_conflict_correction(part_name, current_value, proposed_value, drawing_id):
+    """Auto-files a BOM-vs-drawing material conflict into the EXISTING
+    correction queue -- no new mechanism, exactly the ingestion-auto-trigger
+    locked in packet 002. build_knowledge.py reruns on every app launch, so
+    this guards against re-filing the same proposal every single rebuild.
+    """
+    from src.corrections.store import get_history, create_proposal
+
+    history = get_history()
+    already_filed = any(
+        p["part_name"].lower() == part_name.lower()
+        and p["field"] == "material"
+        and p["proposed_value"] == proposed_value
+        for bucket in ("pending", "accepted", "rejected")
+        for p in history.get(bucket, [])
+    )
+    if already_filed:
+        return
+
+    create_proposal(
+        part_name=part_name,
+        field="material",
+        current_value=current_value,
+        proposed_value=proposed_value,
+        source_ref=f"drawing:{drawing_id}",
+    )
+
+
 def build_drawings():
     manifest = load_manifest()
     drawing_assets = get_drawings(manifest)
+    bom = load_bom()
 
     drawing_records = []
 
     for asset in drawing_assets:
-        curated = CURATED_DRAWINGS.get(asset["id"], {})
+        drawing_id = asset["id"]
+        curated = CURATED_DRAWINGS.get(drawing_id, {})
+
+        title = curated.get("title")
+        material = curated.get("material")
+        bom_match = curated.get("bom_match")
+        match_status = curated.get("match_status")
+
+        if not curated:
+            extraction = _load_extraction(drawing_id)
+            if extraction is not None:
+                title_result = extraction["title"]
+                material_result = extraction["material"]
+
+                if title_result["agreement"] >= AUTO_ACCEPT_THRESHOLD and title_result["value"]:
+                    title = title_result["value"]
+                if material_result["agreement"] >= AUTO_ACCEPT_THRESHOLD and material_result["value"]:
+                    material = material_result["value"]
+
+                if title:
+                    candidate = _find_bom_match_candidate(title, asset.get("subsystem"), bom)
+                    if candidate:
+                        bom_match = candidate
+                        match_status = "unverified"  # auto matches are never "verified"
+
+                        bom_row = bom[bom["Name"] == candidate].iloc[0]
+                        bom_material = safe_value(bom_row.get("Material"))
+                        if (
+                            material
+                            and bom_material
+                            and str(material).strip().lower() != str(bom_material).strip().lower()
+                        ):
+                            _file_conflict_correction(candidate, bom_material, material, drawing_id)
+                    else:
+                        match_status = "unmatched"
 
         record = DrawingRecord(
-            drawing_id=asset["id"],
+            drawing_id=drawing_id,
             subsystem=asset.get("subsystem"),
             source_path=asset.get("source_path"),
             file_path=asset.get("path"),
             distribution=asset.get("distribution"),
             pages=asset.get("pages", 1),
-            title=curated.get("title"),
-            material=curated.get("material"),
-            bom_match=curated.get("bom_match"),
-            match_status=curated.get("match_status"),
+            title=title,
+            material=material,
+            bom_match=bom_match,
+            match_status=match_status,
         )
 
         drawing_records.append(record)
 
     return drawing_records
-    
+
 
 def main():
     parts = build_parts()

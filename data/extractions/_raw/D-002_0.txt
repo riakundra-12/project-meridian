@@ -1,0 +1,15 @@
+{
+  "title": "Left Wall",
+  "title_tag": "Visible",
+  "material": "2mm non-magnetic stainless",
+  "material_tag": "Visible",
+  "primitive_type": "box",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {
+    "length_mm": 775.0,
+    "width_mm": 578.9,
+    "height_mm": 23.0,
+    "thickness_mm": 2.0
+  },
+  "dimensions_tag": "Visible"
+}

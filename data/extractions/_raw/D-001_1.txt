@@ -1,0 +1,14 @@
+{
+  "title": "Door - x2",
+  "title_tag": "Visible",
+  "material": "3mm aluminium",
+  "material_tag": "Visible",
+  "primitive_type": "box",
+  "primitive_type_tag": "Inferred",
+  "dimensions": {
+    "length_mm": 515.0,
+    "width_mm": 492.0,
+    "height_mm": 3.0
+  },
+  "dimensions_tag": "Visible"
+}

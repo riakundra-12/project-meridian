@@ -1,0 +1,1 @@
+{"title": "Left Wall", "title_tag": "Visible", "material": "2mm non-magnetic stainless", "material_tag": "Visible", "primitive_type": "other", "primitive_type_tag": "Visible", "dimensions": {"width_mm": 775.0, "height_mm": 578.9, "thickness_mm": 2.0, "flange_depth_mm": 23.0, "cutout_width_mm": 286.0, "cutout_height_mm": 36.0}, "dimensions_tag": "Visible"}

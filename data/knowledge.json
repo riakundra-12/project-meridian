@@ -11301,10 +11301,10 @@
       "file_path": "dataset/drawings/D-002.pdf",
       "distribution": "clean",
       "pages": 1,
-      "title": null,
-      "material": null,
+      "title": "Left Wall",
+      "material": "2mm non-magnetic stainless",
       "bom_match": null,
-      "match_status": null
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-003",

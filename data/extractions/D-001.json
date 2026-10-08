@@ -1,0 +1,38 @@
+{
+  "title": {
+    "value": "Door",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "material": {
+    "value": "3mm aluminium",
+    "tag": "Visible",
+    "agreement": 0.3
+  },
+  "primitive_type": {
+    "value": "box",
+    "tag": "Inferred",
+    "agreement": 0.3
+  },
+  "dimensions": {
+    "value": {
+      "height_mm": {
+        "value": 3.0,
+        "agreement": 0.3
+      },
+      "length_mm": {
+        "value": 515.0,
+        "agreement": 0.3
+      },
+      "width_mm": {
+        "value": 492.0,
+        "agreement": 0.3
+      }
+    },
+    "tag": "Visible"
+  },
+  "_drawing_id": "D-001",
+  "_distribution": "degraded-only",
+  "_forced_low_confidence": true,
+  "_n_runs": 3
+}
