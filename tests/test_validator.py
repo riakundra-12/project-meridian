@@ -136,6 +136,38 @@ def test_cross_entity_citation_fails_even_with_correct_value():
     assert dropped == 1
 
 
+def test_stringified_list_value_still_validates():
+    """Regression test for a real failure observed live (2026-10-08,
+    artifacts/b0_transcripts/primary_20261008T220525Z.json): Gemini
+    serialized the 'interfaces' field's list-of-dicts value as a
+    Python-repr STRING instead of a real JSON array, so a direct `==`
+    dropped an otherwise-correct claim. Uses the exact string Gemini
+    actually produced, not a synthetic approximation."""
+    grounded = {}
+    record_grounded_facts(grounded, get_part("Front Door"))
+    record_grounded_facts(grounded, {"found": True, "part": {
+        "entity_id": "Front Door",
+        "fields": {"interfaces": {
+            "value": [{"target": "Front Side Box", "resolved": True}],
+            "source_ref": "BOM row 9",
+            "confidence": 1.0,
+        }},
+    }})
+
+    claim = {
+        "statement": "The Front Door interfaces with the Front Side Box.",
+        "entity_id": "Front Door",
+        "field": "interfaces",
+        "value": "[{'resolved': True, 'target': 'Front Side Box'}]",  # verbatim from the real transcript
+        "source_ref": "BOM row 9",
+        "confidence": 1,
+    }
+    validated, dropped = validate_claims([claim], grounded)
+
+    assert validated == [claim]
+    assert dropped == 0
+
+
 @pytest.mark.xfail(
     reason=(
         "Case 5 (a disputed-status field cited as settled) has no real "

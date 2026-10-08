@@ -6,6 +6,30 @@ tools actually returned this turn, then checks every claim's full
 per-claim (a failing claim is dropped, not the whole turn).
 """
 
+import ast
+
+
+def _values_equal(claim_value, grounded_value) -> bool:
+    """Exact equality, with one narrow normalization: Gemini was observed
+    (live run, 2026-10-08, primary scenario) serializing a non-scalar
+    grounded value (the 'interfaces' field's list-of-dicts) as a Python-repr
+    STRING instead of a real JSON array --
+    "[{'resolved': True, 'target': 'Front Side Box'}]" instead of the actual
+    list. That's a real, correct claim wearing the wrong type, not a
+    hallucination -- a direct `!=` drops it every time. Still exact
+    equality after normalizing, not fuzzy matching: a string claim value is
+    only accepted if it literal_eval's to something structurally identical
+    to the grounded value.
+    """
+    if claim_value == grounded_value:
+        return True
+    if isinstance(claim_value, str) and not isinstance(grounded_value, str):
+        try:
+            return ast.literal_eval(claim_value) == grounded_value
+        except (ValueError, SyntaxError):
+            return False
+    return False
+
 
 def record_grounded_facts(grounded_facts: dict, tool_result: dict) -> None:
     """Mutates `grounded_facts` ({(entity_id, field): (value, source_ref)})
@@ -47,7 +71,7 @@ def validate_claims(claims: list, grounded_facts: dict) -> tuple[list, int]:
             continue
 
         grounded_value, grounded_source_ref = grounded
-        if claim.get("value") != grounded_value or claim.get("source_ref") != grounded_source_ref:
+        if not _values_equal(claim.get("value"), grounded_value) or claim.get("source_ref") != grounded_source_ref:
             dropped += 1
             continue
 

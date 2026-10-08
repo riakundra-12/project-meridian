@@ -18,6 +18,7 @@ from typing import Any, Optional
 class ToolCallRequest:
     name: str
     args: dict
+    id: Optional[str] = None  # OpenAI/Groq-style tool_call_id — unused by Gemini, required by Groq's protocol to match a tool result back to its call
 
 
 @dataclass
@@ -282,8 +283,113 @@ class MockProvider(Provider):
 
 
 class GroqProvider(Provider):
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError("groq provider not yet implemented; use AGENT_PROVIDER=gemini or mock")
+    def __init__(self, api_key: Optional[str] = None, model_id: str = "llama-3.3-70b-versatile"):
+        import json as _json
+        from groq import Groq
+
+        self._json = _json
+        key = api_key or os.environ.get("GROQ_API_KEY")
+        if not key:
+            raise RuntimeError(
+                "GROQ_API_KEY is not set (checked constructor arg and "
+                "environment). Copy .env.example to .env and fill it in."
+            )
+        self._client = Groq(api_key=key, timeout=30.0)
+        self.model_id = model_id
+        self._last_message = None
+
+    def new_history(self, system_prompt: str, tool_schemas: list):
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": t["name"],
+                    "description": t["description"],
+                    "parameters": t["parameters"],
+                },
+            }
+            for t in tool_schemas
+        ]
+        return {"messages": [{"role": "system", "content": system_prompt}], "tools": tools}
+
+    def add_user_message(self, history, text: str):
+        history["messages"].append({"role": "user", "content": text})
+        return history
+
+    def _call_model(self, history):
+        import groq
+
+        max_attempts = 6
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return self._client.chat.completions.create(
+                    model=self.model_id,
+                    messages=history["messages"],
+                    tools=history["tools"],
+                    tool_choice="required",
+                )
+            except (groq.APIConnectionError, groq.APITimeoutError, groq.InternalServerError) as e:
+                # Transient (network stall or Groq's own 5xx).
+                if attempt == max_attempts:
+                    raise
+                wait_s = min(2 ** attempt, 20)
+                print(f"  [groq] transient error ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
+                time.sleep(wait_s)
+            except groq.RateLimitError as e:
+                # Same lesson as Gemini's 429 handling (provider.py history,
+                # see GeminiProvider._call_model): don't blindly sleep
+                # through a server-suggested delay that might be hours, not
+                # seconds — a daily-quota 429 and a per-minute 429 both
+                # raise this same exception type.
+                MAX_SLEEP_S = 60
+                if attempt == max_attempts:
+                    raise
+                retry_after = e.response.headers.get("retry-after")
+                wait_s = float(retry_after) + 1.0 if retry_after else min(2 ** attempt, 20)
+                if wait_s > MAX_SLEEP_S:
+                    raise RuntimeError(
+                        f"Groq rate limited with a {wait_s:.0f}s suggested "
+                        f"retry delay (> {MAX_SLEEP_S}s ceiling) — not "
+                        f"sleeping through it. Original error: {e}"
+                    ) from e
+                print(f"  [groq] 429 rate limited, retrying in {wait_s:.1f}s (attempt {attempt}/{max_attempts})")
+                time.sleep(wait_s)
+
+    def generate(self, history) -> ProviderTurn:
+        response = self._call_model(history)
+        message = response.choices[0].message
+        self._last_message = message
+
+        tool_calls = []
+        for tc in message.tool_calls or []:
+            args = self._json.loads(tc.function.arguments)
+            tool_calls.append(ToolCallRequest(name=tc.function.name, args=args, id=tc.id))
+
+        return ProviderTurn(tool_calls=tool_calls, text=message.content)
+
+    def add_model_turn(self, history, turn: ProviderTurn):
+        msg = {"role": "assistant", "content": self._last_message.content}
+        if self._last_message.tool_calls:
+            msg["tool_calls"] = [
+                {
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                }
+                for tc in self._last_message.tool_calls
+            ]
+        history["messages"].append(msg)
+        return history
+
+    def add_tool_result(self, history, tool_call: ToolCallRequest, result: dict):
+        history["messages"].append(
+            {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": self._json.dumps(result),
+            }
+        )
+        return history
 
 
 class HFProvider(Provider):

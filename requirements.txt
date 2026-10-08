@@ -57,3 +57,10 @@ tenacity==9.1.4
 
 # B1/B2 — dev-only, for tests/test_validator.py + tests/test_chat_agent_mock.py
 pytest==9.1.1
+iniconfig==2.3.1
+pluggy==1.6.0
+Pygments==2.21.0
+
+# Groq fallback provider (AGENT_PROVIDER=groq), added 2026-10-09 — all its
+# own deps (httpx, pydantic, etc.) already satisfied by google-genai's above
+groq==1.7.0
