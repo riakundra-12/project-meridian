@@ -32,6 +32,29 @@ def test_sanity1_single_hop_scenario():
     assert "Aluminium" in result.rendered_text
 
 
+def test_rendered_answer_shows_the_citation_inline():
+    """The validator checking a citation internally is not the same as the
+    user ever SEEING it -- caught in review: _render used to join only
+    claim statements, with no visible source_ref anywhere in the chat
+    text. Each claim's citation must now appear inline."""
+    provider = build_provider("mock", scenario="sanity1")
+    result = run_turn(provider, "What material is the Front Door made of?")
+
+    assert "BOM row 9" in result.rendered_text
+
+
+def test_correction_citation_renders_as_accepted_correction():
+    provider = build_provider("mock", scenario="sanity1")
+    # Scripted claim cites a plain BOM row; verify the formatter's
+    # correction: prefix path directly rather than scripting a second mock.
+    from src.agent.chat_agent import _format_citation
+
+    assert _format_citation("correction:proposal-3") == "accepted correction proposal-3"
+    assert _format_citation("manifest:D-001") == "drawing manifest, D-001"
+    assert _format_citation("curated:D-012") == "curated drawing record, D-012"
+    assert _format_citation("BOM row 9") == "BOM row 9"
+
+
 def test_aggregation_scenario():
     """Regression for the search_parts material-matching gap (see
     test_validator.py::test_search_parts_aggregation_claim_validates) —

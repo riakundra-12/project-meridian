@@ -24,9 +24,10 @@ claims, exposes source drawings in the UI, and supports human-reviewed correctio
 
 Chat is answered by a tool-calling agent (Gemini primary, Groq fallback — see
 [Models, services, and external data](#models-services-and-external-data))
-with five read-only tools over the structured knowledge: `get_part`,
-`search_parts`, `get_drawing`, `get_interfaces`, `list_corrections`. The model
-never writes free text directly — it must emit structured claims
+with six read-only tools over the structured knowledge: `get_part`,
+`search_parts`, `get_drawing`, `get_interfaces`, `get_interface_network`
+(real multi-hop traversal — see below), `list_corrections`. The model never
+writes free text directly — it must emit structured claims
 (`submit_final_answer(claims, abstain)`), each one copying its value and
 source citation verbatim from a tool result. A deterministic Python validator
 (no second LLM call) then checks every claim's full
@@ -35,11 +36,24 @@ returned *this turn*, before anything renders. A claim that fails is dropped
 silently from the answer, not shown — the rendered answer only ever contains
 claims that passed.
 
+**Every surviving claim's citation is shown inline in the chat text**, not
+just checked internally — e.g. asking "What material is the Front Door made
+of?" renders:
+
+> Front Door is made of Aluminium. *[BOM row 9]*
+
+A claim sourced from an accepted correction instead of the original BOM
+renders as *[accepted correction proposal-3]*; a drawing-structural field as
+*[drawing manifest, D-001]*. This is what makes the brief's "cite the
+supporting evidence" requirement visible to the user, not just enforced
+behind the scenes.
+
 Examples:
 
 - `Tell me about the Recoater mount block`
 - `What material is the Front Door made of?`
 - `What does the Front Door interface with, and what subsystem is that other part in?` — a genuine **multi-hop** question: the agent calls `get_interfaces` to resolve the free-text `Interface with` cell to a canonical part name, then a second tool call (`get_part`) to fetch that part's subsystem, citing both BOM rows independently.
+- `Map out everything the Left Side Box connects to within 2 steps, including anything that connects back to it` — uses `get_interface_network` to explore multiple hops in one call instead of chaining several `get_interfaces` calls; the real BOM has a genuine cycle here (Left Side Box ↔ Back Box), handled correctly.
 
 If one or more claims get dropped by the validator but at least one survives,
 the answer still renders with a `[N unverified claims dropped]` note rather
@@ -47,10 +61,13 @@ than failing the whole turn. If zero claims survive, or the model itself
 decides to abstain, the app says so plainly instead of showing an empty or
 fabricated answer.
 
-The application never places supplied PDFs or images directly into the LLM's
+**Chat specifically** never places supplied PDFs or images into the LLM's
 context window — only structured JSON (part/drawing field values and their
-citations) ever leaves the machine. See
-[Models, services, and external data](#models-services-and-external-data).
+citations) ever leaves the machine for a chat turn. The separate drawing
+extraction pipeline is the one documented exception to that rule (it reads
+images, by necessity) — see
+[Models, services, and external data](#models-services-and-external-data)
+for the full, accurate picture of what goes where.
 
 ---
 
@@ -150,10 +167,14 @@ no verified BOM mapping is currently recorded.
 This allows the application to expose useful drawing evidence without inventing a
 BOM relationship.
 
-Beyond these hand-curated cases, the agent abstains cleanly on the 26 of 30
-drawings that have no curated metadata at all. Asking about, e.g., `D-001`
-returns a plain statement that the title/material aren't recorded — not a
-plausible-looking guess. This is the citation validator working as designed:
+Beyond these 4 hand-curated cases, vision extraction has now run on all 26
+remaining drawings (see [Drawing extraction](#dataset-coverage) below), but
+promotion into the knowledge store is still conditional — only fields with
+high enough cross-run agreement get auto-accepted. `D-001` is a real example
+where extraction ran but the drawing is degraded, so confidence is forced
+low regardless of agreement and the field stays unrecorded; asking about it
+still returns a plain statement that the title/material aren't recorded —
+not a plausible-looking guess. This is the citation validator working as designed:
 a claim with no matching grounded fact is dropped before it ever renders.
 
 ---
@@ -301,11 +322,20 @@ The supplied drawing set spans:
 - Gas Flow
 - Z-axis
 
-Advanced drawing metadata has been manually curated only where needed for the
-demonstrated workflows.
+4 drawings have hand-curated, human-verified metadata
+(`src/knowledge/curated_drawings.py`). The remaining 26 have real vision-LLM
+extraction (`src/extraction/`, 3-run self-consistency per drawing) — not
+hand-typed dicts: 21/30 now have an extracted title, 7/30 a BOM match
+candidate (always `"unverified"`, never auto-`"verified"` — only a human
+curating the 4 above can set that). Degraded drawings are extracted too, but
+forced to low confidence regardless of what agreement the runs actually
+produced, so they correctly stay unpromoted until reviewed. 3 real
+BOM-vs-drawing material conflicts surfaced this way are sitting in the
+correction review panel right now, not silently resolved either direction.
 
-This is intentional: the project favors a smaller inspectable system over
-unverified automated claims.
+This is intentional: every automated claim is either grounded enough to
+promote, or visibly queued for a human, never silently upgraded to verified
+truth.
 
 ---
 
@@ -560,9 +590,10 @@ Ask:
 What is the title and material of drawing D-001?
 ```
 
-Expected: the agent calls `get_drawing("D-001")`, finds no curated
-title/material for this drawing (26 of 30 are uncurated), and says so rather
-than fabricating a plausible-looking answer — `abstain: true`, zero claims
+Expected: the agent calls `get_drawing("D-001")`, finds no title/material
+recorded for this drawing (extraction ran, but D-001 is degraded so
+confidence was forced too low to auto-promote), and says so rather than
+fabricating a plausible-looking answer — `abstain: true`, zero claims
 rendered.
 
 ## Governed correction
@@ -847,13 +878,24 @@ reasoning (including genuine multi-hop chaining) is implemented here.
   test suite. Cannot answer arbitrary questions — not a usable fallback for
   real chat.
 - **Zero Anthropic/Claude dependency anywhere** in the running app.
+- **Drawing extraction uses a separate Gemini model** (`EXTRACTION_MODEL`,
+  defaults to `gemini-3.5-flash` — deliberately a different model name from
+  chat's, since Gemini's daily quota is scoped per model and this keeps
+  extraction testing from cannibalizing chat's budget). This path is
+  different from chat's disclosure below: **it does send the rendered
+  drawing page image** (PyMuPDF render at `Matrix(3.0,3.0)`, ~216 DPI) to
+  Gemini — that's the whole point, reading a title block and dimensions off
+  a scanned drawing requires vision input. This is an offline, one-time-per-drawing
+  batch step (`src/extraction/`), not something that runs per chat turn.
 
-**What actually leaves the machine:** only structured JSON — the tool
-definitions, and each tool call's small JSON result (part/drawing field
-values, their BOM-row or correction citations, correction-proposal
-records). **No supplied PDF, image, or raw document text is ever sent to the
-LLM.** The 2D/3D rendering pipeline (PyMuPDF, Plotly, NumPy) is entirely
-local and never touches the chat agent.
+**What leaves the machine for a chat turn specifically:** only structured
+JSON — the tool definitions, and each tool call's small JSON result
+(part/drawing field values, their BOM-row or correction citations,
+correction-proposal records). No supplied PDF, image, or raw document text
+is ever sent to the LLM *for chat*. The extraction pipeline above is the one
+documented exception — it sends rendered drawing images, by necessity, as a
+separate offline step. The 2D/3D rendering pipeline the chat UI itself uses
+(PyMuPDF, Plotly, NumPy) is entirely local and never touches either LLM call.
 
 Other main libraries:
 
@@ -872,19 +914,28 @@ procurement information.
 
 Given additional time, the next improvements would be:
 
-1. real relationship-graph traversal over `Interface with` (currently a raw
-   same-row lookup), doubling as the knowledge-graph bonus backend;
-2. vision-LLM structured extraction of dimensions, tolerances, notes, and
-   materials for the 26 currently-uncurated drawings;
-3. replacing the hand-built Plotly meshes with CadQuery-generated geometry
-   from extracted dimensions, including holes and countersinks;
-4. extraction-confidence scoring (self-consistency across repeated
-   extraction runs) for degraded drawings;
-5. broader typed correction workflows beyond material;
-6. the supplier-finding and richer-learning-system bonus tiers;
-7. a concrete before/after measurement pass (coverage, phrasing robustness,
+1. replacing the hand-built Plotly meshes with CadQuery-generated geometry
+   from the now-extracted dimensions, including holes and countersinks;
+2. an interactive view of the relationship graph (`get_interface_network`'s
+   backend already exists — this is the knowledge-graph bonus's remaining
+   UI half);
+3. reviewing the correction proposals extraction auto-filed (3 real
+   BOM-vs-drawing material conflicts, pending in the review panel now) and
+   tuning the 0.67 auto-accept / 5% dimension-tolerance thresholds against
+   real agreement data now that a full extraction run exists to measure
+   against, instead of the starting estimates they shipped with;
+4. broader typed correction workflows beyond material;
+5. the supplier-finding and richer-learning-system bonus tiers;
+6. a concrete before/after measurement pass (coverage, phrasing robustness,
    citation-validity rate, conflict-detection coverage, cost/latency) now
    that there is a real baseline to measure against.
+
+Already done, not hypothetical: real relationship-graph traversal over
+`Interface with` (`get_interface_network`, live-verified including a real
+cycle in the data) and vision-LLM extraction generalized from 4 to all 30
+drawings (21 now have an extracted title, 7 have a BOM match candidate,
+self-consistency confidence scoring included) — see
+[Dataset coverage](#dataset-coverage) and the architecture section above.
 
 
 ---

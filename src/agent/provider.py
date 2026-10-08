@@ -346,6 +346,20 @@ class GroqProvider(Provider):
                 wait_s = min(2 ** attempt, 20)
                 print(f"  [groq] transient error ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
                 time.sleep(wait_s)
+            except groq.BadRequestError as e:
+                # Observed live, ~1-in-3 runs: gpt-oss-120b sometimes emits
+                # a tool call named "commentary" (leaking its internal
+                # channel-naming convention) with otherwise well-formed
+                # submit_final_answer-shaped args. Groq's strict tool-name
+                # validation correctly rejects it -- this is the model's
+                # sampling noise, not a real malformed request, so a bare
+                # retry (not backoff -- it's not rate/server related) is
+                # the right fix rather than failing the whole turn on a
+                # 1-in-3 coin flip.
+                is_channel_quirk = "tool call validation failed" in str(e) and "which was not in request.tools" in str(e)
+                if not is_channel_quirk or attempt == max_attempts:
+                    raise
+                print(f"  [groq] gpt-oss channel-naming quirk, retrying (attempt {attempt}/{max_attempts})")
             except groq.RateLimitError as e:
                 # Same lesson as Gemini's 429 handling (provider.py history,
                 # see GeminiProvider._call_model): don't blindly sleep

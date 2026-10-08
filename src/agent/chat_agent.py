@@ -33,10 +33,28 @@ def _is_drawing_id(entity_id: str) -> bool:
     return bool(_DRAWING_ID_RE.match(entity_id or ""))
 
 
+def _format_citation(source_ref: str) -> str:
+    """Turns an internal source_ref into something a user can read. The
+    validator already enforces that every claim is grounded -- this is
+    purely about SURFACING that citation in the chat text, not another
+    check (caught in review: the rendered answer never showed source_refs
+    at all, only used them internally for validation)."""
+    if source_ref.startswith("correction:"):
+        return f"accepted correction {source_ref.split(':', 1)[1]}"
+    if source_ref.startswith("manifest:"):
+        return f"drawing manifest, {source_ref.split(':', 1)[1]}"
+    if source_ref.startswith("curated:"):
+        return f"curated drawing record, {source_ref.split(':', 1)[1]}"
+    return source_ref  # "BOM row N" already reads fine as-is
+
+
 def _render(validated_claims: list, model_abstained: bool) -> str:
     if not validated_claims:
         return "I don't have grounded data to answer that."
-    text = " ".join(c["statement"] for c in validated_claims)
+    text = " ".join(
+        f"{c['statement']} _[{_format_citation(c['source_ref'])}]_"
+        for c in validated_claims
+    )
     if model_abstained:
         # The model itself flagged low confidence even though some claims
         # independently validated — surface that rather than silently
