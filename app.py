@@ -1,8 +1,10 @@
 import json
+import os
 from pathlib import Path
 
 import streamlit as st
 import pymupdf
+from dotenv import load_dotenv
 from src.visualization.models_3d import (
     recoater_mount_block_figure,
     build_plate_figure,
@@ -16,9 +18,12 @@ from src.corrections.store import (
     get_pending_proposals,
     accept_proposal,
     reject_proposal,
-    get_accepted_value,
     get_history,
 )
+from src.agent.chat_agent import run_turn
+from src.agent.provider import build_provider
+
+load_dotenv()
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -66,219 +71,6 @@ def find_drawing_for_part(drawings, part_name):
 
     return None
 
-def answer_for_part(part):
-    original_material = part["material"]
-
-    accepted_material = get_accepted_value(
-        part["name"],
-        "material",
-    )
-
-    effective_material = (
-        accepted_material
-        if accepted_material is not None
-        else original_material
-    )
-
-    lines = [
-        f"**{part['name']}** belongs to the **{part['subsystem']}** subsystem.",
-        f"- Type: {part['part_type'] or 'Not recorded'}",
-        f"- Material: {effective_material or 'Not recorded'}",
-        f"- Supplier: {part['supplier'] or 'Not recorded'}",
-        f"- Amount: {part['amount'] if part['amount'] is not None else 'Not recorded'}",
-        f"- Cost: {part['cost'] or 'Not recorded'}",
-        f"- Original evidence: BOM row {part['bom_row']}",
-    ]
-
-    if accepted_material is not None:
-        lines.append(
-            f"- Accepted correction applied: material changed from "
-            f"**{original_material}** to **{accepted_material}**"
-        )
-
-    return "\n".join(lines)
-
-def answer_multi_document_query(parts, query):
-    q = query.lower().strip()
-
-    # Shared material query:
-    # Example: "Which parts use Aluminium?"
-    if q.startswith("which parts use "):
-        material = query[len("Which parts use "):].strip().rstrip("?")
-
-        matches = [
-            part for part in parts
-            if part.get("material")
-            and material.lower() in str(part["material"]).lower()
-        ]
-
-        if not matches:
-            return (
-                f"I could not find BOM parts with recorded material matching "
-                f"**{material}**."
-            )
-
-        lines = [
-            f"I found **{len(matches)}** BOM parts with recorded material matching "
-            f"**{material}**:",
-            ""
-        ]
-
-        for part in matches[:15]:
-            lines.append(
-                f"- **{part['name']}** — subsystem: "
-                f"{part.get('subsystem') or 'unknown'}, "
-                f"BOM row {part.get('bom_row')}"
-            )
-
-        if len(matches) > 15:
-            lines.append("")
-            lines.append(
-                f"_Showing the first 15 of {len(matches)} matching BOM records._"
-            )
-
-        lines.append("")
-        lines.append(
-            "_Material values are recorded BOM snapshot evidence, "
-            "not guaranteed current manufacturing truth._"
-        )
-
-        return "\n".join(lines)
-
-    # Subsystem supplier query:
-    # Example: "Which parts in the Recoater subsystem have suppliers?"
-    if (
-        q.startswith("which parts in the ")
-        and " subsystem have suppliers" in q
-    ):
-        prefix = "which parts in the "
-        suffix = " subsystem have suppliers"
-
-        subsystem = q[
-            len(prefix):
-            q.index(suffix)
-        ].strip()
-
-        matches = [
-            part for part in parts
-            if part.get("subsystem")
-            and part["subsystem"].lower() == subsystem
-            and part.get("supplier")
-        ]
-
-        if not matches:
-            return (
-                f"I could not find parts in the **{subsystem}** subsystem "
-                f"with a recorded supplier."
-            )
-
-        lines = [
-            f"Recorded suppliers for parts in the **{subsystem}** subsystem:",
-            ""
-        ]
-
-        for part in matches[:15]:
-            lines.append(
-                f"- **{part['name']}** — supplier: "
-                f"**{part['supplier']}** — BOM row {part.get('bom_row')}"
-            )
-
-        if len(matches) > 15:
-            lines.append("")
-            lines.append(
-                f"_Showing the first 15 of {len(matches)} matching BOM records._"
-            )
-
-        lines.append("")
-        lines.append(
-            "_Supplier values come from the pinned BOM snapshot and may be stale; "
-            "they are not current availability claims._"
-        )
-
-        return "\n".join(lines)
-
-    # Subsystem cost query:
-    # Example: "What are the recorded costs for parts in the Recoater subsystem?"
-    if (
-        q.startswith("what are the recorded costs for parts in the ")
-        and q.endswith(" subsystem?")
-    ):
-        prefix = "what are the recorded costs for parts in the "
-        suffix = " subsystem?"
-
-        subsystem = q[
-            len(prefix):
-            len(q) - len(suffix)
-        ].strip()
-
-        matches = [
-            part for part in parts
-            if part.get("subsystem")
-            and part["subsystem"].lower() == subsystem
-            and part.get("cost") not in (None, "", "nan")
-        ]
-
-        if not matches:
-            return (
-                f"I could not find recorded cost values for parts in the "
-                f"**{subsystem}** subsystem."
-            )
-
-        lines = [
-            f"Recorded BOM costs for parts in the **{subsystem}** subsystem:",
-            ""
-        ]
-
-        for part in matches[:15]:
-            lines.append(
-                f"- **{part['name']}** — recorded cost: "
-                f"**{part['cost']}** — BOM row {part.get('bom_row')}"
-            )
-
-        if len(matches) > 15:
-            lines.append("")
-            lines.append(
-                f"_Showing the first 15 of {len(matches)} matching BOM records._"
-            )
-
-        lines.append("")
-        lines.append(
-            "_These costs are historical values from the pinned BOM snapshot, "
-            "not current prices._"
-        )
-
-        return "\n".join(lines)
-
-    return None
-
-def find_best_part(parts, drawings, query):
-    query_lower = query.lower().strip()
-
-    # 1. Try BOM-backed parts first.
-    exact_or_contains = [
-        part
-        for part in parts
-        if part["name"].lower() in query_lower
-        or query_lower in part["name"].lower()
-    ]
-
-    if exact_or_contains:
-        return {
-            "kind": "part",
-            "record": exact_or_contains[0],
-        }
-
-    # 2. Fall back to curated drawing titles.
-    for drawing in drawings:
-        title = drawing.get("title")
-
-        if title and title.lower() in query_lower:
-            return {
-                "kind": "drawing",
-                "record": drawing,
-            }
-
-    return None
 def parse_material_correction(prompt, parts):
     pattern = re.compile(
         r"(?:change|correct|update)\s+(?:the\s+)?material\s+(?:of|for)\s+(.+?)\s+to\s+(.+)",
@@ -313,6 +105,14 @@ knowledge = load_knowledge()
 
 parts = knowledge["parts"]
 drawings = knowledge["drawings"]
+
+AGENT_PROVIDER = os.environ.get("AGENT_PROVIDER", "gemini")
+try:
+    provider = build_provider(AGENT_PROVIDER)
+    provider_error = None
+except Exception as e:
+    provider = None
+    provider_error = str(e)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -390,34 +190,41 @@ with left:
             st.rerun()
         
 
-        multi_answer = answer_multi_document_query(parts, prompt)
-        if multi_answer is not None:
-            response = multi_answer
-            st.session_state.selected_part = None
-            st.session_state.selected_drawing = None
         else:
-            result = find_best_part(parts, drawings, prompt)
-            if result is None:
-                response = (
-                    "I could not find a supported structured match for that question. "
-                    "Try naming a BOM part or one of the curated drawings."
+            agent_result = None
+            if provider is None:
+                response = f"⚠️ Chat agent isn't configured: {provider_error}"
+            else:
+                try:
+                    with st.spinner("Thinking — calling tools..."):
+                        agent_result = run_turn(provider, prompt)
+                except Exception as e:
+                    response = f"⚠️ Chat agent call failed: {e}"
 
-                )
-            elif result["kind"] == "part":
-                part = result["record"]
-                response = answer_for_part(part)
-                st.session_state.selected_part = part
-                st.session_state.selected_drawing = None
-            elif result["kind"] == "drawing":
-                drawing = result["record"]
-                response = (
-                    f"I found drawing **{drawing['drawing_id']} — {drawing['title']}**. "
-                    "I do not have a verified BOM identity for this drawing, so I am "
-                    "showing the drawing evidence without claiming that it is the same "
-                    "part as a BOM record."
-                )
-                st.session_state.selected_part = None
-                st.session_state.selected_drawing = drawing
+            if agent_result is not None:
+                response = agent_result.rendered_text
+                if agent_result.dropped_count:
+                    plural = "s" if agent_result.dropped_count != 1 else ""
+                    response += (
+                        f"\n\n_[{agent_result.dropped_count} unverified "
+                        f"claim{plural} dropped]_"
+                    )
+
+                if agent_result.referenced_drawing_ids:
+                    drawing_id = agent_result.referenced_drawing_ids[0]
+                    st.session_state.selected_drawing = next(
+                        (d for d in drawings if d["drawing_id"] == drawing_id), None
+                    )
+                    st.session_state.selected_part = None
+                elif agent_result.referenced_part_ids:
+                    part_name = agent_result.referenced_part_ids[0]
+                    st.session_state.selected_part = next(
+                        (p for p in parts if p["name"] == part_name), None
+                    )
+                    st.session_state.selected_drawing = None
+                else:
+                    st.session_state.selected_part = None
+                    st.session_state.selected_drawing = None
 
 
         

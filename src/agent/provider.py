@@ -57,7 +57,11 @@ class GeminiProvider(Provider):
                 "GEMINI_API_KEY is not set (checked constructor arg and "
                 "environment). Copy .env.example to .env and fill it in."
             )
-        self._client = genai.Client(api_key=key)
+        # Explicit per-request timeout — without this, a stalled connection
+        # hangs indefinitely instead of raising something _call_model's
+        # retry loop can act on. Observed directly: a run hung for several
+        # minutes with zero CPU progress before this was added.
+        self._client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=30_000))
         self.model_id = model_id
         self._last_model_content = None
 
@@ -92,6 +96,7 @@ class GeminiProvider(Provider):
         return history
 
     def _call_model(self, history):
+        import httpx
         from google.genai import errors
 
         max_attempts = 6
@@ -102,6 +107,14 @@ class GeminiProvider(Provider):
                     contents=history["contents"],
                     config=history["config"],
                 )
+            except (httpx.TimeoutException, httpx.TransportError) as e:
+                # Network-level stall/timeout (now bounded by the client's
+                # own http_options timeout, not infinite) — transient.
+                if attempt == max_attempts:
+                    raise
+                wait_s = min(2 ** attempt, 20)
+                print(f"  [gemini] network error ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
+                time.sleep(wait_s)
             except errors.ServerError as e:
                 # Transient (e.g. 503 UNAVAILABLE — model overloaded).
                 if attempt == max_attempts:
@@ -110,13 +123,27 @@ class GeminiProvider(Provider):
                 print(f"  [gemini] ServerError ({e}), retrying in {wait_s}s (attempt {attempt}/{max_attempts})")
                 time.sleep(wait_s)
             except errors.ClientError as e:
-                # 429 RESOURCE_EXHAUSTED (free-tier RPM cap) is transient —
-                # the quota resets within seconds. Any other ClientError
-                # (bad model/auth/schema) is not transient and propagates
-                # immediately instead of wasting more quota retrying it.
+                # 429 RESOURCE_EXHAUSTED has two very different real causes
+                # that both land here: the per-minute RPM cap (seconds-scale
+                # retryDelay, worth sleeping through) and the free tier's
+                # PER-DAY cap (observed directly: 20 req/day on
+                # gemini-3.8-flash, retryDelay ~2 HOURS). Blindly sleeping
+                # for a server-suggested delay above this ceiling means the
+                # process silently hangs for hours instead of failing fast
+                # with an actionable message — fail fast instead; the
+                # interactive retry loop will never cover a daily quota
+                # outage, only RPM-scale throttling.
+                MAX_SLEEP_S = 60
                 if getattr(e, "code", None) != 429 or attempt == max_attempts:
                     raise
                 wait_s = self._parse_retry_delay(e) or min(2 ** attempt, 20)
+                if wait_s > MAX_SLEEP_S:
+                    raise RuntimeError(
+                        f"Gemini quota exhausted with a {wait_s:.0f}s suggested "
+                        f"retry delay (> {MAX_SLEEP_S}s ceiling) — this is the "
+                        f"free tier's per-day cap, not per-minute throttling. "
+                        f"Not sleeping through it. Original error: {e}"
+                    ) from e
                 print(f"  [gemini] 429 RESOURCE_EXHAUSTED, retrying in {wait_s:.1f}s (attempt {attempt}/{max_attempts})")
                 time.sleep(wait_s)
 
@@ -178,6 +205,7 @@ MOCK_SCRIPTS = {
                         "statement": "Front Door interfaces with Front Side Box.",
                         "entity_id": "Front Door",
                         "field": "interfaces",
+                        "value": [{"target": "Front Side Box", "resolved": True}],
                         "source_ref": "BOM row 9",
                         "confidence": 1.0,
                     },
@@ -185,6 +213,7 @@ MOCK_SCRIPTS = {
                         "statement": "Front Side Box belongs to the Box subsystem.",
                         "entity_id": "Front Side Box",
                         "field": "subsystem",
+                        "value": "Box",
                         "source_ref": "BOM row 13",
                         "confidence": 1.0,
                     },
@@ -203,6 +232,7 @@ MOCK_SCRIPTS = {
                         "statement": "Front Door is made of Aluminium.",
                         "entity_id": "Front Door",
                         "field": "material",
+                        "value": "Aluminium",
                         "source_ref": "BOM row 9",
                         "confidence": 1.0,
                     }
@@ -221,9 +251,12 @@ MOCK_SCRIPTS = {
 class MockProvider(Provider):
     model_id = "mock"
 
-    def __init__(self, scenario: str):
+    def __init__(self, scenario: Optional[str] = None):
         if scenario not in MOCK_SCRIPTS:
-            raise ValueError(f"No mock script for scenario {scenario!r} (have: {list(MOCK_SCRIPTS)})")
+            raise ValueError(
+                f"mock provider requires a known scenario, got {scenario!r} "
+                f"(have: {list(MOCK_SCRIPTS)})"
+            )
         self._queue = list(MOCK_SCRIPTS[scenario])
 
     def new_history(self, system_prompt: str, tool_schemas: list):
@@ -258,7 +291,7 @@ class HFProvider(Provider):
         raise NotImplementedError("hf provider not yet implemented; use AGENT_PROVIDER=gemini or mock")
 
 
-def build_provider(provider_name: str, scenario: str) -> Provider:
+def build_provider(provider_name: str, scenario: Optional[str] = None) -> Provider:
     if provider_name == "gemini":
         return GeminiProvider()
     if provider_name == "mock":

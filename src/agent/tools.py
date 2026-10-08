@@ -31,11 +31,33 @@ def _load_knowledge() -> dict:
     return _knowledge_cache
 
 
+def _apply_corrections_overlay(shape: dict) -> dict:
+    """Overrides shape['fields'][field] with the latest accepted correction
+    for (entity_id, field), if one exists. Keeps tools handing the model
+    (and the validator's grounded-facts set) CURRENT truth, not a stale BOM
+    snapshot — this is what makes the §1.6 "stale citation" case fail by
+    construction, with no separate overlay-resolution step needed in the
+    validator itself.
+    """
+    entity_id = shape["entity_id"]
+    for item in get_history().get("accepted", []):
+        if item.get("part_name", "").lower() != entity_id.lower():
+            continue
+        field = item.get("field")
+        if field in shape["fields"]:
+            shape["fields"][field] = {
+                "value": item["proposed_value"],
+                "source_ref": f"correction:{item['id']}",
+                "confidence": 1.0,
+            }
+    return shape
+
+
 def get_part(part_name: str) -> dict:
     knowledge = _load_knowledge()
     for part in knowledge["parts"]:
         if part["name"].lower() == part_name.lower():
-            return {"found": True, "part": part_to_shape(part)}
+            return {"found": True, "part": _apply_corrections_overlay(part_to_shape(part))}
     return {"found": False, "part_name": part_name}
 
 
@@ -50,7 +72,7 @@ def search_parts(query: str) -> dict:
     truncated = len(matches) > 10
     results = []
     for p in matches[:10]:
-        shape = part_to_shape(p)
+        shape = _apply_corrections_overlay(part_to_shape(p))
         trimmed = {k: v for k, v in shape["fields"].items() if k in ("subsystem", "type")}
         results.append({"entity_id": shape["entity_id"], "fields": trimmed})
     return {"count": len(matches), "truncated": truncated, "results": results}
@@ -265,15 +287,18 @@ TOOL_SCHEMAS = [
                             "entity_id": {"type": "string"},
                             "field": {
                                 "type": "string",
-                                "description": "Omit if not applicable.",
+                                "description": "The field this claim is about, e.g. 'material', 'subsystem', 'interfaces'.",
+                            },
+                            "value": {
+                                "description": "The asserted value, copied verbatim from the tool result's fields[field].value — not reworded.",
                             },
                             "source_ref": {
                                 "type": "string",
-                                "description": "Copied verbatim from the tool result that produced this claim.",
+                                "description": "Copied verbatim from the tool result's fields[field].source_ref that produced this claim.",
                             },
                             "confidence": {"type": "number"},
                         },
-                        "required": ["statement", "entity_id", "source_ref"],
+                        "required": ["statement", "entity_id", "field", "value", "source_ref"],
                     },
                 },
                 "abstain": {"type": "boolean"},

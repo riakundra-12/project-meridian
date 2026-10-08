@@ -1,0 +1,42 @@
+"""run_turn() exercised against AGENT_PROVIDER=mock's scripted scenarios --
+deterministic, zero network, zero API key. These are the same 3 scenarios
+B0 validated against real Gemini (see src/agent/b0_spike.py); running them
+here through the real validator + rendering + entity-classification logic
+is what makes them regression tests, not just a tool-calling demo.
+
+Run from the repo root: python -m pytest tests/test_chat_agent_mock.py -v
+"""
+
+from src.agent.chat_agent import run_turn
+from src.agent.provider import build_provider
+
+
+def test_primary_multihop_scenario():
+    provider = build_provider("mock", scenario="primary")
+    result = run_turn(provider, "What does the Front Door interface with, and what subsystem is that other part in?")
+
+    assert result.dropped_count == 0
+    assert result.abstain is False
+    assert set(result.referenced_part_ids) == {"Front Door", "Front Side Box"}
+    assert result.referenced_drawing_ids == []
+    assert "Front Side Box" in result.rendered_text
+
+
+def test_sanity1_single_hop_scenario():
+    provider = build_provider("mock", scenario="sanity1")
+    result = run_turn(provider, "What material is the Front Door made of?")
+
+    assert result.dropped_count == 0
+    assert result.abstain is False
+    assert result.referenced_part_ids == ["Front Door"]
+    assert "Aluminium" in result.rendered_text
+
+
+def test_sanity2_abstention_scenario():
+    provider = build_provider("mock", scenario="sanity2")
+    result = run_turn(provider, "What is the title and material of drawing D-001?")
+
+    assert result.abstain is True
+    assert result.referenced_part_ids == []
+    assert result.referenced_drawing_ids == []
+    assert result.rendered_text == "I don't have grounded data to answer that."
