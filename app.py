@@ -357,6 +357,16 @@ with right:
                     )
 st.divider()
 
+def _proposal_origin_label(source_ref: str) -> str:
+    """Inferred from source_ref's prefix, no schema change needed --
+    'drawing:<id>' only ever comes from B5's ingestion auto-filing a
+    BOM-vs-drawing conflict; every other source_ref comes from a user's
+    chat-proposed correction."""
+    if source_ref.startswith("drawing:"):
+        return "System-proposed (ingestion)"
+    return "User-proposed"
+
+
 st.subheader("Correction review")
 
 pending = get_pending_proposals()
@@ -370,6 +380,8 @@ else:
             st.markdown(
                 f"### {proposal['id']} — {proposal['part_name']}"
             )
+
+            st.caption(_proposal_origin_label(proposal["source_ref"]))
 
             st.write(
                 f"**Field:** {proposal['field']}"
@@ -410,18 +422,33 @@ else:
                     reject_proposal(proposal["id"])
                     st.warning("Correction rejected.")
                     st.rerun()
+def _render_history_card(item: dict) -> None:
+    with st.container(border=True):
+        st.markdown(f"**{item['id']} — {item['part_name']}**")
+        st.caption(
+            f"{_proposal_origin_label(item['source_ref'])} · "
+            f"reviewed {item.get('reviewed_at', 'unknown time')}"
+        )
+        st.write(
+            f"{item['field']}: **{item['current_value']}** → "
+            f"**{item['proposed_value']}** _[{item['source_ref']}]_"
+        )
+
+
 with st.expander("Correction history"):
     history = get_history()
 
     st.markdown("#### Accepted")
     if history["accepted"]:
-        st.json(history["accepted"])
+        for item in history["accepted"]:
+            _render_history_card(item)
     else:
         st.write("None")
 
     st.markdown("#### Rejected")
     if history["rejected"]:
-        st.json(history["rejected"])
+        for item in history["rejected"]:
+            _render_history_card(item)
     else:
         st.write("None")
                      
