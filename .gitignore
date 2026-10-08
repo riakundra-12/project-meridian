@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment / API secrets
+.env
+.env.*
+!.env.example
+
+# R leftovers
+.Rhistory
+.RData
+
+# IDE
+.vscode/
+.idea/
+
+# Generated app data
+data/*.db
+data/*.sqlite

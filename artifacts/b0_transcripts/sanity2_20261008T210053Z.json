@@ -1,0 +1,54 @@
+{
+  "scenario": "sanity2",
+  "provider": "mock",
+  "model_id": "mock",
+  "system_prompt": "You are a technical assistant answering questions about a mechanical engineering project (an open-source laser powder bed fusion printer), using only the data tools provided to you.\n\nYou have exactly five data tools (get_part, search_parts, get_drawing, get_interfaces, list_corrections) and one terminal tool (submit_final_answer). You must never answer from your own background knowledge — only from what these tools return in this conversation.\n\nSome questions require more than one tool call in sequence. In particular: get_interfaces only returns the NAMES of parts that interface with the one you asked about — it does not return their subsystem, material, or any other detail. If the user's question needs a detail about an interfacing part, you must make a follow-up call (get_part or get_drawing) using the exact target name returned by get_interfaces, in a later turn, before you can answer. Do not submit a final answer after only the first tool call if the question asks about the second entity too.\n\nIf a tool returns found: false, or the specific field you need is simply absent from a tool's \"fields\", you must abstain for that claim — never guess, infer, or fill in a plausible-sounding value.\n\nYou must end every conversation by calling submit_final_answer. This is the only way to finish — plain text replies are not accepted. Each claim's source_ref must be copied verbatim from the tool result that produced it. If zero claims can be grounded, call submit_final_answer with an empty claims list and abstain=true.",
+  "user_query": "What is the title and material of drawing D-001?",
+  "turns": [
+    {
+      "type": "tool_call",
+      "name": "get_drawing",
+      "args": {
+        "drawing_id": "D-001"
+      },
+      "result": {
+        "found": true,
+        "drawing": {
+          "entity_id": "D-001",
+          "fields": {
+            "subsystem": {
+              "value": "Box",
+              "source_ref": "manifest:D-001",
+              "confidence": 1.0
+            },
+            "source_path": {
+              "value": "CAD/Technical Drawings/Box/Door_x2.PDF",
+              "source_ref": "manifest:D-001",
+              "confidence": 1.0
+            },
+            "file_path": {
+              "value": "dataset/drawings/D-001.pdf",
+              "source_ref": "manifest:D-001",
+              "confidence": 1.0
+            },
+            "distribution": {
+              "value": "degraded-only",
+              "source_ref": "manifest:D-001",
+              "confidence": 1.0
+            },
+            "pages": {
+              "value": 1,
+              "source_ref": "manifest:D-001",
+              "confidence": 1.0
+            }
+          }
+        }
+      }
+    }
+  ],
+  "final_answer": {
+    "claims": [],
+    "abstain": true
+  },
+  "elapsed_seconds": 0.000105
+}
