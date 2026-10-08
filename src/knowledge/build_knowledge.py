@@ -88,21 +88,34 @@ def _find_bom_match_candidate(title: str, subsystem: str, bom):
     Subsystem-filtered first: short mechanical part names share generic
     words ("Wall", "Box", "Mount") across unrelated subsystems, so plain
     string similarity alone is too loose -- found live (D-002 "Left Wall",
-    Box subsystem, false-matched to "Recoater Wall" at cutoff 0.6 before
-    this fix). Falls back to the full BOM only if subsystem filtering
-    leaves nothing to compare against, with a stricter cutoff since that
-    fallback has lost its strongest disambiguating signal.
+    Box subsystem, false-matched to "Recoater Wall" at cutoff 0.6, fixed
+    by subsystem filtering). Falls back to the full BOM only if subsystem
+    filtering leaves nothing to compare against.
+
+    Cutoff is 0.9 in BOTH tiers, not 0.6 -- found live, a second time,
+    that subsystem filtering alone isn't enough: "Recoater Plate" (D-013's
+    real title) vs "Recoater Blade" (a real, different BOM part, same
+    subsystem) scores 0.857 on difflib's ratio, HIGHER than two separately
+    plausible matches ("Window Clamp Frame" vs "Window Frame" = 0.800,
+    "Powder Bracket" vs "Powder stepper bracket" = 0.722). Character-level
+    similarity genuinely cannot separate "Plate" from "Blade" when they
+    share a long common prefix -- no cutoff between 0.722 and 0.857 could
+    keep the good matches and drop the bad one. Chose conservative over
+    permissive: losing some true positives is the correct tradeoff for a
+    system whose whole design is "never present a guess as fact."
     """
     if not title:
         return None
 
+    CUTOFF = 0.9
+
     same_subsystem_names = list(bom[bom["Part family"] == subsystem]["Name"]) if subsystem else []
     if same_subsystem_names:
-        candidates = difflib.get_close_matches(title, same_subsystem_names, n=1, cutoff=0.6)
+        candidates = difflib.get_close_matches(title, same_subsystem_names, n=1, cutoff=CUTOFF)
         if candidates:
             return candidates[0]
 
-    candidates = difflib.get_close_matches(title, list(bom["Name"]), n=1, cutoff=0.75)
+    candidates = difflib.get_close_matches(title, list(bom["Name"]), n=1, cutoff=CUTOFF)
     return candidates[0] if candidates else None
 
 

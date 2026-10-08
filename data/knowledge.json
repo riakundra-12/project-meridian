@@ -11339,8 +11339,8 @@
       "pages": 1,
       "title": "Window Clamp Frame",
       "material": "6061 Alloy",
-      "bom_match": "Window Frame",
-      "match_status": "unverified"
+      "bom_match": null,
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-006",
@@ -11375,8 +11375,8 @@
       "pages": 1,
       "title": "Powder Bracket",
       "material": null,
-      "bom_match": "Powder stepper bracket",
-      "match_status": "unverified"
+      "bom_match": null,
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-009",
@@ -11435,8 +11435,8 @@
       "pages": 1,
       "title": "Recoater Plate",
       "material": "3.3315 (EN-AW 5005)",
-      "bom_match": "Recoater Blade",
-      "match_status": "unverified"
+      "bom_match": null,
+      "match_status": "unmatched"
     },
     {
       "drawing_id": "D-014",

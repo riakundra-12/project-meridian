@@ -90,7 +90,11 @@ Examples:
 
 ### Orbitable 3D reconstruction
 
-Three parts include interactive Plotly 3D reconstructions:
+**10 parts** include interactive Plotly 3D reconstructions — the brief's
+minimum of 3, covered twice over.
+
+3 are hand-built (`src/visualization/models_3d.py`, proven working, kept
+untouched when B6 added a generation pipeline):
 
 | Drawing | Part | Reconstruction |
 |---|---|---|
@@ -98,13 +102,30 @@ Three parts include interactive Plotly 3D reconstructions:
 | D-026 | Build Plate | Ø250 mm circular plate envelope |
 | D-025 | Bygge Base Ring | Ø250 / Ø224 mm ring envelope |
 
+7 more are real CadQuery geometry generated from B5's extracted dimensions
+(`src/visualization/cadquery_mesh.py`) — not hand-tuned, driven entirely by
+what the vision extraction read off each drawing and the self-consistency
+runs agreed on:
+
+| Drawing | Extracted title | Primitive |
+|---|---|---|
+| D-007 | Dispenser Shaft v6 | cylinder |
+| D-013 | Recoater Plate | box |
+| D-015 | Silikone Wiper | box |
+| D-017 | Galvo Montage Plade | box |
+| D-019 | 1mm silicone pakning | ring |
+| D-024 | ByggeBase | cylinder |
+| D-027 | Cylinder Spænd Ring | ring |
+
 Every 3D view is explicitly labeled:
 
 > Reconstructed from the supplied 2D drawing evidence. This is not native CAD.
 
-The current reconstructions intentionally model the major geometric envelope only.
-Fine details such as threaded holes, countersinks, and all machining features are
-not represented.
+All 10 intentionally model the major geometric envelope only. Fine details
+such as threaded holes, countersinks, and all machining features are not
+represented — the hover text on the 7 extracted ones names the actual
+extracted dimensions and their confidence tag, so what's modeled and what's
+approximated is visible, not implied.
 
 ---
 
@@ -325,13 +346,18 @@ The supplied drawing set spans:
 4 drawings have hand-curated, human-verified metadata
 (`src/knowledge/curated_drawings.py`). The remaining 26 have real vision-LLM
 extraction (`src/extraction/`, 3-run self-consistency per drawing) — not
-hand-typed dicts: 21/30 now have an extracted title, 7/30 a BOM match
-candidate (always `"unverified"`, never auto-`"verified"` — only a human
-curating the 4 above can set that). Degraded drawings are extracted too, but
-forced to low confidence regardless of what agreement the runs actually
-produced, so they correctly stay unpromoted until reviewed. 3 real
-BOM-vs-drawing material conflicts surfaced this way are sitting in the
-correction review panel right now, not silently resolved either direction.
+hand-typed dicts: 21/30 now have an extracted title, 1/30 an auto-matched
+BOM candidate (always `"unverified"`, never auto-`"verified"` — only a
+human curating the 4 above can set that). That number is intentionally
+low: name-similarity matching found live that character-level similarity
+alone cannot reliably separate genuinely different parts that share a
+subsystem and a common word (confirmed case: "Recoater Plate" vs the
+BOM's "Recoater Blade" scored *higher* on similarity than two separately
+plausible matches) — the auto-accept threshold was raised accordingly,
+trading recall for precision, consistent with this project's standing
+rule of never presenting a guess as fact. Degraded drawings are extracted
+too, but forced to low confidence regardless of what agreement the runs
+actually produced, so they correctly stay unpromoted until reviewed.
 
 This is intentional: every automated claim is either grounded enough to
 promote, or visibly queued for a human, never silently upgraded to verified
@@ -914,16 +940,18 @@ procurement information.
 
 Given additional time, the next improvements would be:
 
-1. replacing the hand-built Plotly meshes with CadQuery-generated geometry
-   from the now-extracted dimensions, including holes and countersinks;
-2. an interactive view of the relationship graph (`get_interface_network`'s
+1. an interactive view of the relationship graph (`get_interface_network`'s
    backend already exists — this is the knowledge-graph bonus's remaining
    UI half);
-3. reviewing the correction proposals extraction auto-filed (3 real
-   BOM-vs-drawing material conflicts, pending in the review panel now) and
-   tuning the 0.67 auto-accept / 5% dimension-tolerance thresholds against
-   real agreement data now that a full extraction run exists to measure
-   against, instead of the starting estimates they shipped with;
+2. CadQuery geometry for the `"other"`/`"unknown"` primitive shapes
+   (currently correctly skipped, not approximated) and finer features
+   (holes, countersinks) for the shapes it does generate;
+3. tuning the 0.67 field auto-accept / 0.9 bom_match / 5% dimension-tolerance
+   thresholds against real agreement data now that a full extraction run
+   exists to measure against, instead of the starting estimates they
+   shipped with — the 0.9 bom_match cutoff in particular trades recall for
+   precision deliberately (see Dataset coverage above) and could likely be
+   improved with a smarter signal than raw character similarity;
 4. broader typed correction workflows beyond material;
 5. the supplier-finding and richer-learning-system bonus tiers;
 6. a concrete before/after measurement pass (coverage, phrasing robustness,
@@ -932,10 +960,16 @@ Given additional time, the next improvements would be:
 
 Already done, not hypothetical: real relationship-graph traversal over
 `Interface with` (`get_interface_network`, live-verified including a real
-cycle in the data) and vision-LLM extraction generalized from 4 to all 30
-drawings (21 now have an extracted title, 7 have a BOM match candidate,
-self-consistency confidence scoring included) — see
-[Dataset coverage](#dataset-coverage) and the architecture section above.
+cycle in the data); vision-LLM extraction generalized from 4 to all 30
+drawings (21 now have an extracted title, self-consistency confidence
+scoring included); real CadQuery-generated 3D for 7 more parts beyond the
+original 3, driven by extracted dimensions, geometrically verified against
+the actual drawing (D-013's 270×25×6mm box matches its real title block
+exactly); and a readable, origin-labeled correction history, gate-tested
+with 3 real reviews (2 accepted, 1 rejected — one of the accepted ones
+was later found to rest on a false BOM match and reverted, with a full
+audit trail, not silently). See [Dataset coverage](#dataset-coverage) and
+the architecture section above.
 
 
 ---
