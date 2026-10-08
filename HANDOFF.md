@@ -108,6 +108,17 @@ The backend for the knowledge-graph bonus already exists
   matches for avoiding wrong ones. If you tune it back down, re-verify
   against real drawings, not just the two example pairs in the code
   comment — that's exactly how the bug got in the first place.
+  **One more trap in this same area, found by a second review right
+  after the first fix**: changing the threshold does NOT retroactively
+  revisit corrections already accepted under the old one.
+  `proposal-1` (Window Frame) was filed under the old 0.6 cutoff and is
+  still accepted even though D-005 now reads `unmatched` at 0.9 — checked
+  by hand (re-read the actual drawing, judged it genuinely plausible, not
+  a confirmed error like `proposal-3`) and kept, with a note on the
+  correction explaining why. If you touch this threshold again, go check
+  `data/corrections.json`'s `accepted` list against the new
+  `knowledge.json` match results afterward — don't assume they're still
+  consistent.
 - **Groq's `gpt-oss-120b` has a real, observed ~1-in-3 quirk**: it
   sometimes emits a tool call named `"commentary"` (an internal
   channel-naming leak), which Groq's strict validation rejects. There's a

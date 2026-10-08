@@ -10,7 +10,8 @@
       "source_ref": "drawing:D-005",
       "status": "accepted",
       "created_at": "2026-10-08T23:22:00.748102+00:00",
-      "reviewed_at": "2026-10-08T23:36:29.704273+00:00"
+      "reviewed_at": "2026-10-08T23:36:29.704273+00:00",
+      "note": "KEPT after re-review 2026-10-09: the bom_match cutoff was later raised 0.6->0.9 (fixing a confirmed false match on a different proposal, D-013 'Recoater Plate'/'Recoater Blade'), which means D-005 now reads match_status='unmatched' in knowledge.json even though this correction (filed under the old, looser match) remains accepted -- flagged by a second supervisor review as the same latent risk, checked rather than ignored. Re-inspected D-005's actual drawing directly: title 'Window Clamp Frame', description 'Laser Window frame with 2 o-ring grooves and 20 M4 threaded holes, holds 210x297mm laser window', subsystem Box -- same subsystem as BOM's 'Window Frame', and 'Clamp' reads as a functional descriptor (it clamps/seals the window via o-rings) rather than a different object category, unlike Plate-vs-Blade. Judged genuinely plausible, not confirmed wrong like proposal-3 -- kept rather than reverted. If re-reviewing, don't assume the threshold change alone settles it either way; it doesn't retroactively revisit this specific case."
     }
   ],
   "rejected": [
