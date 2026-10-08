@@ -12,9 +12,9 @@ the loop's stop condition.
 import json
 from pathlib import Path
 
-from src.ingestion.load_sources import load_bom
 from src.corrections.store import get_history
 from src.agent.shapes import part_to_shape, drawing_to_shape
+from src.agent.graph import get_interfaces, get_interface_network
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -103,66 +103,6 @@ def get_drawing(drawing_id: str) -> dict:
     return {"found": False, "drawing_id": drawing_id}
 
 
-def get_interfaces(part_name: str) -> dict:
-    """Reads the BOM's 'Interface with' column directly — this data has
-    never been wired into knowledge.json/PartRecord. Generalizing that is
-    B1's job; B0 reads the raw BOM independently via the existing loader.
-    """
-    bom = load_bom()
-    matches = bom[bom["Name"].str.lower() == part_name.lower()]
-    if matches.empty:
-        return {"found": False, "part_name": part_name}
-
-    idx = matches.index[0]
-    row = matches.loc[idx]
-    canonical_name = row["Name"]
-    raw = row.get("Interface with")
-
-    is_empty = raw is None or (isinstance(raw, float) and raw != raw) or str(raw).strip() == ""
-    if is_empty:
-        return {"found": True, "part": {"entity_id": canonical_name, "fields": {}}}
-
-    pieces = [p.strip() for p in str(raw).split(",") if p.strip()]
-
-    count_cell = row.get("Count (Interface with)")
-    try:
-        if count_cell is not None and count_cell == count_cell and str(count_cell).strip() != "":
-            expected = int(count_cell)
-            if expected != len(pieces):
-                print(
-                    f"[get_interfaces] WARNING: BOM row {idx} ({canonical_name}) "
-                    f"declares Count (Interface with)={expected} but comma-split "
-                    f"into {len(pieces)} pieces: {pieces}"
-                )
-    except (TypeError, ValueError):
-        pass
-
-    name_lookup = {n.lower(): n for n in bom["Name"]}
-    interfaces = []
-    for piece in pieces:
-        resolved_name = name_lookup.get(piece.lower())
-        if resolved_name:
-            interfaces.append({"target": resolved_name, "resolved": True})
-        else:
-            interfaces.append(
-                {"target": piece, "resolved": False, "note": "no matching BOM part name"}
-            )
-
-    return {
-        "found": True,
-        "part": {
-            "entity_id": canonical_name,
-            "fields": {
-                "interfaces": {
-                    "value": interfaces,
-                    "source_ref": f"BOM row {idx}",
-                    "confidence": 1.0,
-                }
-            },
-        },
-    }
-
-
 def list_corrections(part_name: str = None) -> dict:
     history = get_history()
     if not part_name:
@@ -179,6 +119,7 @@ TOOL_DISPATCH = {
     "search_parts": search_parts,
     "get_drawing": get_drawing,
     "get_interfaces": get_interfaces,
+    "get_interface_network": get_interface_network,
     "list_corrections": list_corrections,
 }
 
@@ -248,15 +189,15 @@ TOOL_SCHEMAS = [
     {
         "name": "get_interfaces",
         "description": (
-            "Return the BOM 'Interface with' relationships for a part, "
-            "read directly from the BOM CSV (this is not yet in "
-            "knowledge.json). If the part has no recorded interfaces, the "
-            "result has no 'interfaces' field — do not invent one. "
-            "Interface targets are free text and may not resolve to a "
-            "canonical BOM part name; such targets come back with "
-            "resolved=false and must not be treated as verified. This tool "
-            "only returns names, not any other detail about the "
-            "interfacing part — call get_part separately if you need more."
+            "Return a part's DIRECT (1-hop) 'Interface with' relationships "
+            "only. If the part has no recorded interfaces, the result has "
+            "no 'interfaces' field — do not invent one. Interface targets "
+            "are free text and may not resolve to a canonical BOM part "
+            "name; such targets come back with resolved=false and must not "
+            "be treated as verified. This tool only returns names, not any "
+            "other detail about the interfacing part — call get_part "
+            "separately, or use get_interface_network if the question needs "
+            "more than one hop."
         ),
         "parameters": {
             "type": "object",
@@ -265,6 +206,35 @@ TOOL_SCHEMAS = [
                     "type": "string",
                     "description": "Exact or near-exact BOM part name, e.g. 'Front Door'.",
                 }
+            },
+            "required": ["part_name"],
+        },
+    },
+    {
+        "name": "get_interface_network",
+        "description": (
+            "Explore a part's interface relationships out to multiple hops "
+            "in one call — use this instead of chaining several "
+            "get_interfaces calls when the question is about connectivity "
+            "a few steps out (e.g. 'what does X ultimately connect to "
+            "through Y'). Returns one entry per part reached (including the "
+            "starting part), each with its own direct interfaces and "
+            "source_ref, independently citable. The underlying relationship "
+            "graph can contain real cycles (A interfaces with B, B "
+            "interfaces with A) — this is expected and handled; each part "
+            "still only appears once in the results."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "part_name": {
+                    "type": "string",
+                    "description": "Exact or near-exact BOM part name, e.g. 'Front Door'.",
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "How many hops out to explore. Defaults to 2 if omitted.",
+                },
             },
             "required": ["part_name"],
         },

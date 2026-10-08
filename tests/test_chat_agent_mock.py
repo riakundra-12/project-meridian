@@ -44,6 +44,18 @@ def test_aggregation_scenario():
     assert set(result.referenced_part_ids) == {"Front Door", "Print Platform"}
 
 
+def test_interface_network_scenario():
+    """get_interface_network's {results: [...]} shape validates through the
+    real validator with zero changes needed -- exercises the real cycle
+    (Left Side Box <-> Back Box) end to end through run_turn."""
+    provider = build_provider("mock", scenario="interface_network")
+    result = run_turn(provider, "What is Left Side Box's local interface network?")
+
+    assert result.dropped_count == 0
+    assert result.abstain is False
+    assert set(result.referenced_part_ids) == {"Left Side Box", "Back Box"}
+
+
 def test_sanity2_abstention_scenario():
     provider = build_provider("mock", scenario="sanity2")
     result = run_turn(provider, "What is the title and material of drawing D-001?")

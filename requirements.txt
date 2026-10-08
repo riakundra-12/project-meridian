@@ -64,3 +64,6 @@ Pygments==2.21.0
 # Groq fallback provider (AGENT_PROVIDER=groq), added 2026-10-09 — all its
 # own deps (httpx, pydantic, etc.) already satisfied by google-genai's above
 groq==1.7.0
+
+# B4 — relationship graph over BOM "Interface with"
+networkx==3.6.1

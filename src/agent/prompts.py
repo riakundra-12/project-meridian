@@ -14,7 +14,11 @@ other detail. If the user's question needs a detail about an interfacing \
 part, you must make a follow-up call (get_part or get_drawing) using the \
 exact target name returned by get_interfaces, in a later turn, before you \
 can answer. Do not submit a final answer after only the first tool call if \
-the question asks about the second entity too.
+the question asks about the second entity too. If the question is about \
+connectivity more than one hop out (e.g. "what does X connect to through \
+Y"), use get_interface_network instead of chaining several get_interfaces \
+calls yourself — it explores multiple hops in one call. The relationship \
+graph can contain real cycles; that is expected, not an error.
 
 If a tool returns found: false, or the specific field you need is simply \
 absent from a tool's "fields", you must abstain for that claim — never \

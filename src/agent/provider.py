@@ -246,6 +246,42 @@ MOCK_SCRIPTS = {
         {"name": "get_drawing", "args": {"drawing_id": "D-001"}},
         {"name": "submit_final_answer", "args": {"claims": [], "abstain": True}},
     ],
+    "interface_network": [
+        {"name": "get_interface_network", "args": {"part_name": "Left Side Box", "max_depth": 2}},
+        {
+            "name": "submit_final_answer",
+            "args": {
+                "claims": [
+                    {
+                        "statement": "Left Side Box interfaces with Back Box.",
+                        "entity_id": "Left Side Box",
+                        "field": "interfaces",
+                        "value": [
+                            {"target": "Print Platform", "resolved": True},
+                            {"target": "Top Side", "resolved": True},
+                            {"target": "Front Side Box", "resolved": True},
+                            {"target": "Back Box", "resolved": True},
+                        ],
+                        "source_ref": "BOM row 8",
+                        "confidence": 1.0,
+                    },
+                    {
+                        "statement": "Back Box interfaces back with Left Side Box, confirming the cycle.",
+                        "entity_id": "Back Box",
+                        "field": "interfaces",
+                        "value": [
+                            {"target": "Left Side Box", "resolved": True},
+                            {"target": "Print Platform", "resolved": True},
+                            {"target": "Top Side", "resolved": True},
+                        ],
+                        "source_ref": "BOM row 10",
+                        "confidence": 1.0,
+                    },
+                ],
+                "abstain": False,
+            },
+        },
+    ],
     "aggregation": [
         {"name": "search_parts", "args": {"query": "Aluminium"}},
         {
