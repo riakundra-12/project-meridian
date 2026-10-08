@@ -10,6 +10,7 @@ from src.visualization.models_3d import (
     build_plate_figure,
     bygge_base_ring_figure,
 )
+from src.visualization.cadquery_mesh import extracted_drawing_figure
 
 import re
 
@@ -340,6 +341,20 @@ with right:
                     width="stretch",
                 )
                 st.caption(limitation)
+            else:
+                extracted_fig = extracted_drawing_figure(drawing["drawing_id"])
+                if extracted_fig is not None:
+                    st.markdown("### 3D reconstruction")
+                    st.caption(
+                        "Reconstructed from the supplied 2D drawing evidence. "
+                        "This is not native CAD."
+                    )
+                    st.plotly_chart(extracted_fig, width="stretch")
+                    st.caption(
+                        "Generated from B5's vision-extracted dimensions via "
+                        "CadQuery, not hand-built — hover the shape for the "
+                        "extracted dimensions and their confidence tags."
+                    )
 st.divider()
 
 st.subheader("Correction review")
