@@ -310,7 +310,7 @@ class MockProvider(Provider):
 
 
 class GroqProvider(Provider):
-    def __init__(self, api_key: Optional[str] = None, model_id: str = "llama-3.3-70b-versatile"):
+    def __init__(self, api_key: Optional[str] = None, model_id: str = "openai/gpt-oss-120b"):
         import json as _json
         from groq import Groq
 
