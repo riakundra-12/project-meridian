@@ -108,8 +108,22 @@ parts = knowledge["parts"]
 drawings = knowledge["drawings"]
 
 AGENT_PROVIDER = os.environ.get("AGENT_PROVIDER", "gemini")
+
+
+@st.cache_resource
+def _get_provider(provider_name: str):
+    # Streamlit reruns the whole script on every interaction -- without
+    # this cache, a fresh GeminiProvider/GroqProvider (and its underlying
+    # API client) was being rebuilt on every single chat message. Safe to
+    # cache: a provider's only mutable state (_last_model_content, for
+    # Gemini) is set then read within one run_turn() call before the next
+    # one starts, never shared across concurrent turns in Streamlit's
+    # single-threaded-per-session model.
+    return build_provider(provider_name)
+
+
 try:
-    provider = build_provider(AGENT_PROVIDER)
+    provider = _get_provider(AGENT_PROVIDER)
     provider_error = None
 except Exception as e:
     provider = None

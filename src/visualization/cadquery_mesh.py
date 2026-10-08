@@ -10,12 +10,23 @@ data/extractions/ and returns None instead of raising for anything that
 isn't a confident, qualifying extraction.
 """
 
+"""
+Import discipline: `cadquery`/`trimesh` are NOT imported at module level.
+Found live (deployed on Streamlit Community Cloud): a question that never
+even touches CadQuery-generated geometry (e.g. a part whose drawing uses
+one of the 3 original hand-built reconstructions) still paid the cost of
+importing cadquery's full dependency tree (numba JIT, scipy, VTK) just
+because app.py imports this module at startup. On a resource-constrained
+cold container that's real overhead for zero benefit. Importing lazily,
+inside the two functions that actually need them, means merely importing
+this module is cheap, and the heavy import only happens the first time a
+qualifying drawing's 3D view is actually requested.
+"""
+
 import tempfile
 from pathlib import Path
 
-import cadquery as cq
 import plotly.graph_objects as go
-import trimesh
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EXTRACTIONS_DIR = PROJECT_ROOT / "data" / "extractions"
@@ -33,11 +44,14 @@ def _get_dim(dimensions: dict, *keys):
     raise KeyError(f"none of {keys} present in extracted dimensions: {list(dimensions)}")
 
 
-def build_solid(primitive_type: str, dimensions: dict) -> cq.Workplane:
+def build_solid(primitive_type: str, dimensions: dict):
     """dimensions: the raw {key: {"value": ..., "agreement": ...}} dict
     from an extraction result's dimensions.value. Raises ValueError for
     primitive types this function doesn't know how to build -- never
-    silently approximates "other"/"unknown" as a box."""
+    silently approximates "other"/"unknown" as a box. Returns a
+    cadquery.Workplane (import is lazy -- see module docstring)."""
+    import cadquery as cq
+
     if primitive_type == "box":
         length = _get_dim(dimensions, "length_mm")
         width = _get_dim(dimensions, "width_mm")
@@ -65,11 +79,14 @@ def build_solid(primitive_type: str, dimensions: dict) -> cq.Workplane:
     raise ValueError(f"no solid builder for primitive_type={primitive_type!r}")
 
 
-def solid_to_mesh3d_args(solid: cq.Workplane) -> dict:
+def solid_to_mesh3d_args(solid) -> dict:
     """Exports to a temp STL, loads with trimesh, returns the exact kwargs
     the existing go.Mesh3d(x=,y=,z=,i=,j=,k=) call shape in models_3d.py
     already expects -- confirmed by direct inspection of its two existing
-    call sites, not guessed."""
+    call sites, not guessed. solid: a cadquery.Workplane (import is lazy
+    -- see module docstring)."""
+    import trimesh
+
     with tempfile.NamedTemporaryFile(suffix=".stl", delete=False) as f:
         stl_path = f.name
     try:
