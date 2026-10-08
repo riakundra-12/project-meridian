@@ -697,10 +697,11 @@ footnote: Gemini's free tier caps `gemini-3.8-flash` at **20 requests per
 day** (confirmed by hitting it directly during development, not from
 documentation) on top of a 5 requests/minute throttle. A single multi-hop
 chat turn can cost 2-4 of those 20 daily requests. Groq is the fallback
-specifically because its published limits (30 RPM / 1,000 requests/day for
-70B-class models) are far more headroom, though — disclosed plainly — Groq's
-tool-calling behavior on this exact tool set has not yet been exercised
-against a live multi-hop question the way Gemini's has.
+specifically for its much higher published limits (30 RPM / 1,000
+requests/day), and has been verified live on the same full scenario
+matrix as Gemini — same multi-hop chain, same aggregation question, same
+abstention and prompt-injection checks, all clean on the first real
+attempt.
 
 ### Trust
 
@@ -728,9 +729,9 @@ confirmed directly, not assumed. Heavy testing or a long interactive demo
 session can exhaust it; the app fails fast with a clear error rather than
 hanging when that happens (an earlier version of the retry logic did hang,
 for up to the ~2-hour delay Google's API suggests — fixed to cap any single
-retry wait at 60s). `AGENT_PROVIDER=groq` is the documented fallback but its
-real behavior on this exact tool set has only been exercised in isolated
-testing, not a full live multi-hop run, at time of writing.
+retry wait at 60s). `AGENT_PROVIDER=groq` is a real, live-verified fallback
+for exactly this situation — switch providers with one `.env` line, no
+code change.
 
 ### Natural-language understanding
 
@@ -835,10 +836,13 @@ reasoning (including genuine multi-hop chaining) is implemented here.
   free tier. Confirmed via live testing to correctly perform real multi-hop
   tool chaining (see `artifacts/b0_transcripts/`), not just single-tool
   lookups. Free tier is capped at 20 requests/day — see Known limitations.
-- **Fallback: Groq** (`llama-3.3-70b-versatile`, via the official `groq`
-  SDK), free tier. Implemented with the same forced tool-calling contract;
-  not yet exercised against a live multi-hop question at time of writing —
-  disclosed, not hidden.
+- **Fallback: Groq** (`openai/gpt-oss-120b`, via the official `groq` SDK),
+  free tier. Note the model id: Groq fully deprecated `llama-3.3-70b-versatile`
+  (not just slow/unavailable — not in the live model catalog for this key
+  at all); `gpt-oss-120b` is the current 70B+ option that meets the
+  multi-hop-chaining requirement. Live-verified on the same scenario matrix
+  as Gemini (multi-hop chain, aggregation, abstention, prompt-injection
+  check) — all passed on first attempt, no retries needed.
 - **`mock`**: a scripted, deterministic provider used only by the automated
   test suite. Cannot answer arbitrary questions — not a usable fallback for
   real chat.
@@ -874,13 +878,11 @@ Given additional time, the next improvements would be:
    materials for the 26 currently-uncurated drawings;
 3. replacing the hand-built Plotly meshes with CadQuery-generated geometry
    from extracted dimensions, including holes and countersinks;
-4. a live-tested Groq run against the real multi-hop case, not just
-   isolated testing;
-5. extraction-confidence scoring (self-consistency across repeated
+4. extraction-confidence scoring (self-consistency across repeated
    extraction runs) for degraded drawings;
-6. broader typed correction workflows beyond material;
-7. the supplier-finding and richer-learning-system bonus tiers;
-8. a concrete before/after measurement pass (coverage, phrasing robustness,
+5. broader typed correction workflows beyond material;
+6. the supplier-finding and richer-learning-system bonus tiers;
+7. a concrete before/after measurement pass (coverage, phrasing robustness,
    citation-validity rate, conflict-detection coverage, cost/latency) now
    that there is a real baseline to measure against.
 
