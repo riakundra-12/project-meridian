@@ -72,6 +72,131 @@ def find_drawing_for_part(drawings, part_name):
 
     return None
 
+
+def render_drawing_evidence(container, selected, selected_drawing):
+    """Staged rendering: text/BOM fields -> 2D drawing -> 3D reconstruction,
+    each with its own spinner, so the user sees progress instead of nothing
+    until the whole turn finishes. Called twice per chat turn by design:
+    once immediately after the agent answers (inside the chat-handling
+    block, before st.rerun() -- for instant feedback) and once normally on
+    the next rerun (reading session_state -- for persistence on reload).
+    st.rerun() always cuts the first call's script execution short right
+    after it runs, so there's no double-render in a single pass.
+    """
+    with container:
+        st.subheader("Drawing evidence")
+
+        if selected is None and selected_drawing is None:
+            st.info("Ask about a part in chat to inspect its drawing evidence.")
+            return
+
+        with st.spinner("Loading drawing evidence..."):
+            if selected_drawing is not None:
+                drawing = selected_drawing
+            else:
+                drawing = find_drawing_for_part(drawings, selected["name"])
+
+        if drawing is None:
+            st.info(
+                "No verified drawing link is currently available "
+                "for this part."
+            )
+            return
+
+        st.markdown(
+            f"### {drawing['drawing_id']} — "
+            f"{drawing['title']}"
+        )
+
+        st.write(
+            f"**Drawing material:** "
+            f"{drawing['material'] or 'Unknown'}"
+        )
+
+        st.write(
+            f"**Source quality:** "
+            f"{drawing['distribution']}"
+        )
+
+        st.write(
+            f"**Link status:** "
+            f"{drawing['match_status']}"
+        )
+        if drawing["match_status"] == "unverified":
+            st.warning(
+                "Identity evidence is not fully consistent. "
+                "The upstream source filename suggests 'RecoaterStagePlate', "
+                "while the drawing title says 'Recoater Linear Plate'. "
+                "A similarly named BOM row exists, so this relationship is "
+                "shown as a candidate rather than a verified identity."
+            )
+
+        with st.spinner("Rendering 2D drawing..."):
+            pdf_path = PROJECT_ROOT / drawing["file_path"]
+            if pdf_path.exists():
+                image_bytes = render_pdf_page(str(pdf_path))
+                st.image(
+                    image_bytes,
+                    caption=f"{drawing['drawing_id']} — source drawing",
+                    width="stretch",
+                )
+            else:
+                st.error("Drawing file could not be found.")
+
+        st.caption(
+            "Drawing and BOM evidence are preserved "
+            "as separate source claims."
+        )
+
+        if drawing["drawing_id"] in {"D-012", "D-025", "D-026"}:
+            with st.spinner("Generating 3D reconstruction..."):
+                st.markdown("### 3D reconstruction")
+                st.caption(
+                    "Reconstructed from the supplied 2D drawing evidence. "
+                    "This is not native CAD."
+                )
+                if drawing["drawing_id"] == "D-012":
+                    fig = recoater_mount_block_figure()
+                    limitation = (
+                        "Current reconstruction represents the main "
+                        "120 × 25 × 15 mm block envelope; "
+                        "hole/thread details are not yet modeled."
+                    )
+                elif drawing["drawing_id"] == "D-026":
+                    fig = build_plate_figure()
+                    limitation = (
+                        "Current reconstruction represents the main circular "
+                        "plate envelope; the three through-hole features are "
+                        "not yet modeled."
+                    )
+                else:
+                    fig = bygge_base_ring_figure()
+                    limitation = (
+                        "Current reconstruction represents the ring envelope; "
+                        "the eight countersunk holes are not yet modeled."
+                    )
+            st.plotly_chart(
+                fig,
+                width="stretch",
+            )
+            st.caption(limitation)
+        else:
+            with st.spinner("Generating 3D reconstruction..."):
+                extracted_fig = extracted_drawing_figure(drawing["drawing_id"])
+            if extracted_fig is not None:
+                st.markdown("### 3D reconstruction")
+                st.caption(
+                    "Reconstructed from the supplied 2D drawing evidence. "
+                    "This is not native CAD."
+                )
+                st.plotly_chart(extracted_fig, width="stretch")
+                st.caption(
+                    "Generated from B5's vision-extracted dimensions via "
+                    "CadQuery, not hand-built — hover the shape for the "
+                    "extracted dimensions and their confidence tags."
+                )
+
+
 def parse_material_correction(prompt, parts):
     pattern = re.compile(
         r"(?:change|correct|update)\s+(?:the\s+)?material\s+(?:of|for)\s+(.+?)\s+to\s+(.+)",
@@ -202,8 +327,13 @@ with left:
             )
             st.session_state.selected_part = part
             st.session_state.selected_drawing = None
+
+            with st.chat_message("assistant"):
+                st.markdown(response)
+            render_drawing_evidence(right, part, None)
+
             st.rerun()
-        
+
 
         else:
             agent_result = None
@@ -251,124 +381,18 @@ with left:
             }
         )
 
+        with st.chat_message("assistant"):
+            st.markdown(response)
+        render_drawing_evidence(
+            right, st.session_state.selected_part, st.session_state.selected_drawing
+        )
+
         st.rerun()
 
 
-with right:
-    st.subheader("Drawing evidence")
-
-    selected = st.session_state.selected_part
-    selected_drawing = st.session_state.selected_drawing
-
-    if selected is None and selected_drawing is None:
-        st.info("Ask about a part in chat to inspect its drawing evidence.")
-
-    else:
-        if selected_drawing is not None:
-            drawing = selected_drawing
-        else:
-            drawing = find_drawing_for_part(drawings, selected["name"])
-        
-        
-
-        if drawing is None:
-            st.info(
-                "No verified drawing link is currently available "
-                "for this part."
-            )
-
-        else:
-            st.markdown(
-                f"### {drawing['drawing_id']} — "
-                f"{drawing['title']}"
-            )
-
-            st.write(
-                f"**Drawing material:** "
-                f"{drawing['material'] or 'Unknown'}"
-            )
-
-            st.write(
-                f"**Source quality:** "
-                f"{drawing['distribution']}"
-            )
-
-            st.write(
-                f"**Link status:** "
-                f"{drawing['match_status']}"
-            )
-            if drawing["match_status"] == "unverified":
-                 st.warning(
-                     "Identity evidence is not fully consistent. "
-                     "The upstream source filename suggests 'RecoaterStagePlate', "
-                     "while the drawing title says 'Recoater Linear Plate'. "
-                     "A similarly named BOM row exists, so this relationship is "
-                     "shown as a candidate rather than a verified identity."
-                    )
-
-            pdf_path = PROJECT_ROOT / drawing["file_path"]
-
-            if pdf_path.exists():
-                image_bytes = render_pdf_page(str(pdf_path))
-
-                st.image(
-                    image_bytes,
-                    caption=f"{drawing['drawing_id']} — source drawing",
-                    width="stretch",
-                )
-            else:
-                st.error("Drawing file could not be found.")
-
-            st.caption(
-                "Drawing and BOM evidence are preserved "
-                "as separate source claims."
-            )
-
-            if drawing["drawing_id"] in {"D-012", "D-025", "D-026"}:
-                st.markdown("### 3D reconstruction")
-                st.caption(
-                    "Reconstructed from the supplied 2D drawing evidence. "
-                    "This is not native CAD."
-                )
-                if drawing["drawing_id"] == "D-012":
-                    fig = recoater_mount_block_figure()
-                    limitation = (
-                        "Current reconstruction represents the main "
-                        "120 × 25 × 15 mm block envelope; "
-                        "hole/thread details are not yet modeled."
-                    )
-                elif drawing["drawing_id"] == "D-026":
-                    fig = build_plate_figure()
-                    limitation = (
-                        "Current reconstruction represents the main circular "
-                        "plate envelope; the three through-hole features are "
-                        "not yet modeled."
-                    )
-                else:
-                    fig = bygge_base_ring_figure()
-                    limitation = (
-                        "Current reconstruction represents the ring envelope; "
-                        "the eight countersunk holes are not yet modeled."
-                    )
-                st.plotly_chart(
-                    fig,
-                    width="stretch",
-                )
-                st.caption(limitation)
-            else:
-                extracted_fig = extracted_drawing_figure(drawing["drawing_id"])
-                if extracted_fig is not None:
-                    st.markdown("### 3D reconstruction")
-                    st.caption(
-                        "Reconstructed from the supplied 2D drawing evidence. "
-                        "This is not native CAD."
-                    )
-                    st.plotly_chart(extracted_fig, width="stretch")
-                    st.caption(
-                        "Generated from B5's vision-extracted dimensions via "
-                        "CadQuery, not hand-built — hover the shape for the "
-                        "extracted dimensions and their confidence tags."
-                    )
+render_drawing_evidence(
+    right, st.session_state.selected_part, st.session_state.selected_drawing
+)
 st.divider()
 
 def _proposal_origin_label(source_ref: str) -> str:
