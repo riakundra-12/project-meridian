@@ -184,6 +184,30 @@ def test_search_parts_reflects_accepted_corrections():
     assert any(r["entity_id"] == "Front Door" for r in result["results"])
 
 
+def test_get_drawing_resolves_by_title_not_just_id():
+    """Regression for a real gap: README's own demo script asks about
+    drawings by title ('Bygge Base Ring', 'Recoater Linear Plate') --
+    neither is a BOM part name, and get_drawing only matched exact IDs,
+    so those literal demo questions had no path to resolve."""
+    from src.agent.tools import get_drawing
+
+    result = get_drawing("Bygge Base Ring")
+    assert result["found"] is True
+    assert result["drawing"]["entity_id"] == "D-025"
+
+    result = get_drawing("Recoater Linear Plate")
+    assert result["found"] is True
+    assert result["drawing"]["entity_id"] == "D-014"
+
+    # Exact-ID lookup must still take priority / keep working unchanged.
+    result = get_drawing("D-012")
+    assert result["found"] is True
+    assert result["drawing"]["entity_id"] == "D-012"
+
+    result = get_drawing("Not A Real Title")
+    assert result["found"] is False
+
+
 def test_stringified_list_value_still_validates():
     """Regression test for a real failure observed live (2026-10-08,
     artifacts/b0_transcripts/primary_20261008T220525Z.json): Gemini

@@ -104,9 +104,19 @@ def search_parts(query: str) -> dict:
 
 
 def get_drawing(drawing_id: str) -> dict:
+    """Confirmed real gap (fresh-context audit, 2026-10-08): README's own
+    demo script asks about drawings by TITLE ("Bygge Base Ring",
+    "Recoater Linear Plate") -- neither is a BOM part name, and nothing
+    resolved a title to an ID, so those literal demo questions failed.
+    Falls back to an exact (case-insensitive) title match only when the ID
+    lookup finds nothing -- doesn't change behavior for the common case of
+    a real drawing_id."""
     knowledge = _load_knowledge()
     for drawing in knowledge["drawings"]:
         if drawing["drawing_id"].lower() == drawing_id.lower():
+            return {"found": True, "drawing": drawing_to_shape(drawing)}
+    for drawing in knowledge["drawings"]:
+        if drawing.get("title") and drawing["title"].lower() == drawing_id.lower():
             return {"found": True, "drawing": drawing_to_shape(drawing)}
     return {"found": False, "drawing_id": drawing_id}
 
@@ -179,18 +189,22 @@ TOOL_SCHEMAS = [
     {
         "name": "get_drawing",
         "description": (
-            "Look up one fabrication drawing by ID (e.g. 'D-012'). Most of "
-            "the 30 drawings have only structural fields (subsystem, "
-            "file_path, distribution, pages); only 4 have curated "
-            "title/material/bom_match. A missing field means unknown — "
-            "never guess its value."
+            "Look up one fabrication drawing by ID (e.g. 'D-012') or by its "
+            "exact title (e.g. 'Bygge Base Ring') if the user named it "
+            "that way instead. All 30 drawings have structural fields "
+            "(subsystem, file_path, distribution, pages); most also have "
+            "title/material and a candidate BOM match, from either manual "
+            "curation or automated extraction — confidence and review "
+            "status vary, check match_status, never assume a candidate is "
+            "confirmed. A missing field means unknown — never guess its "
+            "value."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "drawing_id": {
                     "type": "string",
-                    "description": "Drawing ID, e.g. 'D-012'.",
+                    "description": "Drawing ID (e.g. 'D-012') or exact drawing title (e.g. 'Bygge Base Ring').",
                 }
             },
             "required": ["drawing_id"],
