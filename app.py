@@ -93,7 +93,7 @@ def render_drawing_evidence(container, selected, selected_drawing):
     after it runs, so there's no double-render in a single pass.
     """
     with container:
-        st.subheader("Drawing evidence")
+        _section_header("Drawing evidence")
 
         if selected is None and selected_drawing is None:
             st.info("Ask about a part in chat to inspect its drawing evidence.")
@@ -127,9 +127,10 @@ def render_drawing_evidence(container, selected, selected_drawing):
             f"{drawing['distribution']}"
         )
 
-        st.write(
-            f"**Link status:** "
-            f"{drawing['match_status']}"
+        status = drawing['match_status'] or 'unmatched'
+        st.markdown(
+            f'**Link status:** <span class="status-badge status-{status}">{status}</span>',
+            unsafe_allow_html=True,
         )
         if drawing["match_status"] == "unverified":
             st.warning(
@@ -309,6 +310,169 @@ st.set_page_config(
     layout="wide",
 )
 
+# Visual design pass (2026-10-11) -- was zero custom CSS / no .streamlit/
+# config.toml theme before this, confirmed by searching the repo. Targets
+# STABLE data-testid selectors, not Streamlit's hashed emotion-cache
+# classes (those rotate across Streamlit versions -- confirmed unstable
+# while inspecting the live DOM earlier this session).
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+    [data-testid="stChatMessage"] {
+        border-radius: 14px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        padding: 0.3rem 0.6rem;
+        margin-bottom: 0.4rem;
+    }
+
+    [data-testid="stHorizontalBlock"] { gap: 0.4rem !important; }
+
+    [data-testid="stAlertContainer"] { border-radius: 10px; }
+
+    [data-testid="stButton"] button { border-radius: 999px !important; }
+
+    h2, h3 { letter-spacing: 0.01em; }
+
+    .section-rule {
+        border: none;
+        border-top: 2px solid #C2572F;
+        width: 2.2rem;
+        margin: 0.1rem 0 0.9rem 0;
+    }
+
+    .sources-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8a8577;
+        margin: 0.4rem 0 0.3rem 0.1rem;
+    }
+
+    .source-chip {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+        margin: 0 0.3rem 0.3rem 0;
+        border: 1px solid transparent;
+    }
+    .source-chip-bom { background: #EEEAE2; color: #4A4538; border-color: #DCD5C6; }
+    .source-chip-drawing { background: #F6E3DA; color: #9A3F1C; border-color: #EBC4AF; }
+    .source-chip-correction { background: #E3EDE3; color: #2F5C33; border-color: #C6DCC6; }
+
+    .status-badge {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+    }
+    .status-verified { background: #E3EDE3; color: #2F5C33; }
+    .status-unverified { background: #FBF0D9; color: #8A5A00; }
+    .status-unmatched { background: #EEEAE2; color: #6B6758; }
+    .origin-user { background: #F6E3DA; color: #9A3F1C; }
+    .origin-system { background: #E3EDE3; color: #2F5C33; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+def _section_header(text: str) -> None:
+    st.markdown(
+        f'<h3 style="margin-bottom:0.2rem;">{text}</h3><hr class="section-rule">',
+        unsafe_allow_html=True,
+    )
+
+
+_SOURCE_TYPE_META = {
+    "bom": ("📄", "BOM", "bom"),
+    "manifest": ("📐", "Drawing", "drawing"),
+    "curated": ("📐", "Drawing (curated)", "drawing"),
+    "extracted": ("📐", "Drawing (extracted)", "drawing"),
+    "correction": ("✏️", "Correction", "correction"),
+}
+
+
+def _classify_source(source_ref: str):
+    for prefix in ("correction", "curated", "extracted", "manifest"):
+        if source_ref.startswith(f"{prefix}:"):
+            return _SOURCE_TYPE_META[prefix]
+    return _SOURCE_TYPE_META["bom"]  # "BOM row N" reads fine as-is
+
+
+def _chip_label(source_ref: str, kind: str) -> str:
+    """Short enough to fit a pill button without Streamlit's default
+    truncation (confirmed live: 6-wide st.columns + a full source_ref like
+    'BOM row 19' clipped to 'BO…'). Full source_ref is still available via
+    the button's hover tooltip (see _render_sources)."""
+    if kind == "bom" and source_ref.lower().startswith("bom row "):
+        return f"Row {source_ref[8:]}"
+    if ":" in source_ref:
+        return source_ref.split(":", 1)[-1]
+    return source_ref
+
+
+def _render_sources(claims: list, msg_key: str) -> None:
+    """The "relevant documents" section: one deduped chip per unique
+    source_ref a message's validated claims actually cite. Reads directly
+    from TurnResult.validated_claims (see chat_agent.py) -- never
+    re-parses the rendered answer text, so this can never show a source
+    the validator didn't actually check. Drawing/BOM-entity chips are
+    real buttons that jump the evidence panel straight to that source;
+    correction-type chips have no equivalent detail view today, so they
+    render as plain static chips."""
+    if not claims:
+        return
+
+    seen = {}
+    for c in claims:
+        seen.setdefault(c["source_ref"], c)  # first claim naming this source wins for dedup
+
+    st.markdown('<div class="sources-label">Relevant documents</div>', unsafe_allow_html=True)
+    shown = list(seen.items())[:6]
+    # Fixed 3-wide rows, not one row sized to however many sources exist --
+    # confirmed live that >3 equal-width columns in this panel truncates
+    # button text no matter how short the label is.
+    COLS_PER_ROW = 3
+    for row_start in range(0, len(shown), COLS_PER_ROW):
+        row = shown[row_start:row_start + COLS_PER_ROW]
+        cols = st.columns(COLS_PER_ROW)
+        for col, (source_ref, claim) in zip(cols, row):
+            icon, label, kind = _classify_source(source_ref)
+            chip_text = f"{icon} {_chip_label(source_ref, kind)}"
+            entity_id = claim["entity_id"]
+
+            with col:
+                if kind == "drawing":
+                    if st.button(chip_text, key=f"src-{msg_key}-{source_ref}", help=f"{label}: {source_ref}"):
+                        st.session_state.selected_drawing = next(
+                            (d for d in drawings if d["drawing_id"] == entity_id), None
+                        )
+                        st.session_state.selected_part = None
+                        st.rerun()
+                elif kind == "bom":
+                    if st.button(chip_text, key=f"src-{msg_key}-{source_ref}", help=f"{label}: {source_ref}"):
+                        st.session_state.selected_part = next(
+                            (p for p in parts if p["name"] == entity_id), None
+                        )
+                        st.session_state.selected_drawing = None
+                        st.rerun()
+                else:
+                    st.markdown(
+                        f'<span class="source-chip source-chip-{kind}" title="{source_ref}">{chip_text}</span>',
+                        unsafe_allow_html=True,
+                )
+    if len(seen) > 6:
+        st.caption(f"+ {len(seen) - 6} more source{'s' if len(seen) - 6 != 1 else ''}")
+
+
 st.title("Project Meridian")
 st.caption("Evidence-grounded drawing intelligence for OpenLPBF v2")
 
@@ -317,11 +481,12 @@ left, right = st.columns([1, 1])
 
 
 with left:
-    st.subheader("Chat")
+    _section_header("Chat")
 
-    for message in st.session_state.messages:
+    for idx, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            _render_sources(message.get("claims", []), msg_key=f"hist-{idx}")
 
     prompt = st.chat_input(
         "Ask about a part, e.g. 'Tell me about the Recoater mount block'"
@@ -363,6 +528,7 @@ with left:
                 {
                     "role": "assistant",
                     "content": response,
+                    "claims": [],
                 }
             )
             st.session_state.selected_part = part
@@ -427,11 +593,16 @@ with left:
             {
                 "role": "assistant",
                 "content": response,
+                "claims": agent_result.validated_claims if agent_result is not None else [],
             }
         )
 
         with st.chat_message("assistant"):
             st.markdown(response)
+            _render_sources(
+                agent_result.validated_claims if agent_result is not None else [],
+                msg_key=f"hist-{len(st.session_state.messages) - 1}",
+            )
         render_drawing_evidence(
             right, st.session_state.selected_part, st.session_state.selected_drawing
         )
@@ -454,7 +625,14 @@ def _proposal_origin_label(source_ref: str) -> str:
     return "User-proposed"
 
 
-st.subheader("Correction review")
+def _origin_badge_html(source_ref: str) -> str:
+    is_system = source_ref.startswith("drawing:")
+    css_class = "origin-system" if is_system else "origin-user"
+    label = _proposal_origin_label(source_ref)
+    return f'<span class="status-badge {css_class}">{label}</span>'
+
+
+_section_header("Correction review")
 
 pending = get_pending_proposals()
 
@@ -468,7 +646,7 @@ else:
                 f"### {proposal['id']} — {proposal['part_name']}"
             )
 
-            st.caption(_proposal_origin_label(proposal["source_ref"]))
+            st.markdown(_origin_badge_html(proposal["source_ref"]), unsafe_allow_html=True)
 
             st.write(
                 f"**Field:** {proposal['field']}"
@@ -512,9 +690,11 @@ else:
 def _render_history_card(item: dict, allow_revert: bool = False) -> None:
     with st.container(border=True):
         st.markdown(f"**{item['id']} — {item['part_name']}**")
-        st.caption(
-            f"{_proposal_origin_label(item['source_ref'])} · "
-            f"reviewed {item.get('reviewed_at', 'unknown time')}"
+        st.markdown(
+            f"{_origin_badge_html(item['source_ref'])} "
+            f"<span style='color:#8a8577;font-size:0.82rem;'> · reviewed "
+            f"{item.get('reviewed_at', 'unknown time')}</span>",
+            unsafe_allow_html=True,
         )
         st.write(
             f"{item['field']}: **{item['current_value']}** → "

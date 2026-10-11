@@ -124,6 +124,7 @@ class TurnResult:
     abstain: bool = False
     transcript_turns: list = field(default_factory=list)
     raw_final_answer: dict = None  # the model's claims+abstain BEFORE validation — kept for transcripts/debugging
+    validated_claims: list = field(default_factory=list)  # exactly what _render() used -- the UI's Sources section reads this, never re-parses rendered_text
 
 
 def run_turn(provider, user_query: str, max_turns: int = MAX_TURNS) -> TurnResult:
@@ -173,6 +174,7 @@ def run_turn(provider, user_query: str, max_turns: int = MAX_TURNS) -> TurnResul
                 abstain=model_abstain or not validated,
                 transcript_turns=transcript_turns,
                 raw_final_answer=final_call.args,
+                validated_claims=validated,
             )
 
     return TurnResult(

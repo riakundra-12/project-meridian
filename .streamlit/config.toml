@@ -1,0 +1,14 @@
+# Real Streamlit theme (2026-10-11) -- was no .streamlit/ directory at
+# all before this, confirmed by searching the repo. Every built-in widget
+# (buttons, inputs, alerts, sliders) re-skins from this automatically --
+# no CSS fighting needed for the base palette. Warm, technical-neutral
+# direction (evidence/blueprint feel), single confident accent, not
+# generic SaaS blue. app.py's injected <style> block layers on top for
+# the things this file can't reach (chat bubbles, citation chips, badges).
+[theme]
+base = "light"
+primaryColor = "#C2572F"
+backgroundColor = "#FAFAF7"
+secondaryBackgroundColor = "#F0EBE3"
+textColor = "#20231F"
+font = "sans serif"
