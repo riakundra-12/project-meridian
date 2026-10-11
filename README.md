@@ -985,14 +985,31 @@ Representative outputs are saved in `screenshots/`:
 - `05_bygge_base_ring_drawing.png`
 - `06_bygge_base_ring_3d.png`
 - `07_d014_uncertainty.png`
-- `08_correction_chat_proposal.png`
-- `09_correction_review.png`
-- `10_correction_after_acceptance.png`
+- `08a_correction_baseline_before.png` — chat-grounded answer before any
+  correction (material: Aluminium, each claim individually cited)
+- `08b_correction_chat_proposal.png` — the required flow's actual first
+  step: a user proposing a correction in chat
+- `08c_correction_pending_review.png` — the review panel, labeled
+  "User-proposed" (not the ingestion auto-filer) so its origin is visible
+- `08d_correction_accepted.png` — accepted via the review UI
+- `08e_correction_after_acceptance.png` — the **same question**, now
+  answered by the real agent with the corrected material, citing
+  `accepted correction proposal-4` inline — the brief's "answers change
+  after acceptance" requirement, live
+- `08f_correction_before_revert.png` / `08g_correction_after_revert.png` —
+  the new Revert path (see Known Limitations), showing an accepted
+  correction can be undone through the UI itself, not by hand-editing data
+  files
 - `11_multi_document_material_query.png`
 
-These cover the required chat-to-drawing flow, all three reconstructed parts,
-uncertainty handling, the governed correction before/after, and a multi-document
-query.
+Note: `01`–`07` and `11` are from the original (pre-LLM-agent) build and
+still show the 2D/3D viewer and layout accurately, but their *chat answer
+text* reflects the old deterministic router, not the current agent's
+citation-templated answers — `08a`–`08g` (captured live against the real
+agent, 2026-10-11) are the current, representative chat output. These cover
+the required chat-to-drawing flow, the 3 reconstructed parts, uncertainty
+handling, the governed correction before/after/revert cycle (live-verified
+end to end, not just read in the code), and a multi-document query.
 
 ---
 

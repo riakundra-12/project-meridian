@@ -49,6 +49,7 @@ def _format_citation(source_ref: str) -> str:
 
 
 _FIELD_TEMPLATES = {
+    "name": "{entity} is recorded in the BOM as {value}.",
     "material": "{entity} is made of {value}.",
     "subsystem": "{entity} belongs to the {value} subsystem.",
     "supplier": "{entity}'s recorded supplier is {value}.",

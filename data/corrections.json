@@ -37,6 +37,18 @@
       "created_at": "2026-10-08T23:22:00.751390+00:00",
       "reviewed_at": "2026-10-09T02:40:00.000000+00:00",
       "note": "Reverted post-acceptance: a supervisor review caught that D-013's real title is 'Recoater Plate', a different physical part from BOM's 'Recoater Blade' (material genuinely Silicone, confirmed). The name-similarity matcher that proposed this false-matched them at cutoff 0.6; raised to 0.9 same session so this class of false match isn't auto-filed again. Originally accepted during live correction-loop testing; un-accepted once the false match was confirmed, not left standing on a technicality."
+    },
+    {
+      "id": "proposal-4",
+      "part_name": "Recoater mount block",
+      "field": "material",
+      "current_value": "Aluminium",
+      "proposed_value": "Stainless steel",
+      "source_ref": "BOM row 30",
+      "status": "rejected",
+      "created_at": "2026-10-11T18:04:32.118725+00:00",
+      "reviewed_at": "2026-10-11T18:04:36.338079+00:00",
+      "reverted_at": "2026-10-11T18:09:40.338542+00:00"
     }
   ]
 }
