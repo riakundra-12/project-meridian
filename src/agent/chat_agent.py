@@ -45,6 +45,11 @@ def _format_citation(source_ref: str) -> str:
         return f"drawing manifest, {source_ref.split(':', 1)[1]}"
     if source_ref.startswith("curated:"):
         return f"curated drawing record, {source_ref.split(':', 1)[1]}"
+    if source_ref.startswith("extracted:"):
+        # Distinct from "curated:" on purpose (AGY audit, 2026-10-11) --
+        # this is automated vision-extraction output nobody has reviewed,
+        # not a human-curated record, and the citation must say so.
+        return f"vision-extracted drawing record, {source_ref.split(':', 1)[1]} (unreviewed)"
     return source_ref  # "BOM row N" already reads fine as-is
 
 

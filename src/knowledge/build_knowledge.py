@@ -162,6 +162,7 @@ def build_drawings():
         material = curated.get("material")
         bom_match = curated.get("bom_match")
         match_status = curated.get("match_status")
+        curation_source = "human" if curated else None
 
         if not curated:
             extraction = _load_extraction(drawing_id)
@@ -171,8 +172,10 @@ def build_drawings():
 
                 if title_result["agreement"] >= AUTO_ACCEPT_THRESHOLD and title_result["value"]:
                     title = title_result["value"]
+                    curation_source = "auto_extraction"
                 if material_result["agreement"] >= AUTO_ACCEPT_THRESHOLD and material_result["value"]:
                     material = material_result["value"]
+                    curation_source = "auto_extraction"
 
                 if title:
                     candidate = _find_bom_match_candidate(title, asset.get("subsystem"), bom)
@@ -202,6 +205,7 @@ def build_drawings():
             material=material,
             bom_match=bom_match,
             match_status=match_status,
+            curation_source=curation_source,
         )
 
         drawing_records.append(record)

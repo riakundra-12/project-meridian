@@ -78,6 +78,17 @@ def test_correction_citation_renders_as_accepted_correction():
     assert _format_citation("BOM row 9") == "BOM row 9"
 
 
+def test_extracted_drawing_citation_distinct_from_curated():
+    """Regression for a real gap (AGY audit, 2026-10-11): D-012
+    (human-curated) and D-013 (auto-extracted, never reviewed) used to get
+    the IDENTICAL 'curated:' citation -- falsely implying human review for
+    raw extraction output. Must read differently."""
+    from src.agent.chat_agent import _format_citation
+
+    assert _format_citation("extracted:D-013") == "vision-extracted drawing record, D-013 (unreviewed)"
+    assert _format_citation("extracted:D-013") != _format_citation("curated:D-013")
+
+
 def test_cost_claim_renders_procurement_caveat():
     """Regression for a gap the claims-first fix (Phase 1) introduced:
     removing all model-authored free text also removed the only place a

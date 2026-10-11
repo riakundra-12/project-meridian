@@ -11292,7 +11292,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-002",
@@ -11304,7 +11305,8 @@
       "title": "Left Wall",
       "material": "2mm non-magnetic stainless",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-003",
@@ -11316,7 +11318,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-004",
@@ -11328,7 +11331,8 @@
       "title": "Top Plate",
       "material": "3 mm non-magnetic stainless",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-005",
@@ -11340,7 +11344,8 @@
       "title": "Window Clamp Frame",
       "material": "6061 Alloy",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-006",
@@ -11352,7 +11357,8 @@
       "title": null,
       "material": "Non-magnetic stainless 3mm (or thicker)",
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-007",
@@ -11364,7 +11370,8 @@
       "title": "Dispenser Shaft v6",
       "material": "Aluminium",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-008",
@@ -11376,7 +11383,8 @@
       "title": "Powder Bracket",
       "material": null,
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-009",
@@ -11388,7 +11396,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-010",
@@ -11400,7 +11409,8 @@
       "title": "Motor Plate",
       "material": "2mm non-magnetic stainless",
       "bom_match": "Motor plate",
-      "match_status": "unverified"
+      "match_status": "unverified",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-011",
@@ -11412,7 +11422,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-012",
@@ -11424,7 +11435,8 @@
       "title": "Recoater Mount Block",
       "material": "EN-AW 5005 aluminium",
       "bom_match": "Recoater mount block",
-      "match_status": "verified"
+      "match_status": "verified",
+      "curation_source": "human"
     },
     {
       "drawing_id": "D-013",
@@ -11436,7 +11448,8 @@
       "title": "Recoater Plate",
       "material": "3.3315 (EN-AW 5005)",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-014",
@@ -11448,7 +11461,8 @@
       "title": "Recoater Linear Plate",
       "material": "EN-AW 5005 aluminium",
       "bom_match": "Recoater stage plate",
-      "match_status": "unverified"
+      "match_status": "unverified",
+      "curation_source": "human"
     },
     {
       "drawing_id": "D-015",
@@ -11460,7 +11474,8 @@
       "title": "Silikone Wiper",
       "material": "Silicon Rubber",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-016",
@@ -11472,7 +11487,8 @@
       "title": "Galvo Bundplade",
       "material": "7075-T6, Plate (SS)",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-017",
@@ -11484,7 +11500,8 @@
       "title": "Galvo Montage Plade",
       "material": null,
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-018",
@@ -11496,7 +11513,8 @@
       "title": "Galvo Mount Side x2",
       "material": "7075-T6, Plate (SS)",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-019",
@@ -11508,7 +11526,8 @@
       "title": "1mm silicone pakning",
       "material": "Silicon Rubber",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-020",
@@ -11520,7 +11539,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-021",
@@ -11532,7 +11552,8 @@
       "title": "Blower Outlet",
       "material": "Non-magnetic stainless",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-022",
@@ -11544,7 +11565,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-023",
@@ -11556,7 +11578,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     },
     {
       "drawing_id": "D-024",
@@ -11568,7 +11591,8 @@
       "title": "ByggeBase",
       "material": "3.3315 (EN-AW 5005)",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-025",
@@ -11580,7 +11604,8 @@
       "title": "Bygge Base Ring",
       "material": "EN-AW 5005 aluminium",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "human"
     },
     {
       "drawing_id": "D-026",
@@ -11592,7 +11617,8 @@
       "title": "Build Plate",
       "material": "AISI 316 Stainless Steel",
       "bom_match": "Build Plate",
-      "match_status": "verified"
+      "match_status": "verified",
+      "curation_source": "human"
     },
     {
       "drawing_id": "D-027",
@@ -11604,7 +11630,8 @@
       "title": "Cylinder Spænd Ring",
       "material": "6063-T6",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-028",
@@ -11616,7 +11643,8 @@
       "title": "Varmeelement Plade",
       "material": "3.3315 (EN-AW 5005)",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-029",
@@ -11628,7 +11656,8 @@
       "title": "Z-axis BottomPlate",
       "material": "Aluminium",
       "bom_match": null,
-      "match_status": "unmatched"
+      "match_status": "unmatched",
+      "curation_source": "auto_extraction"
     },
     {
       "drawing_id": "D-030",
@@ -11640,7 +11669,8 @@
       "title": null,
       "material": null,
       "bom_match": null,
-      "match_status": null
+      "match_status": null,
+      "curation_source": null
     }
   ]
 }

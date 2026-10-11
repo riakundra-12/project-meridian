@@ -184,6 +184,28 @@ def test_search_parts_reflects_accepted_corrections():
     assert any(r["entity_id"] == "Front Door" for r in result["results"])
 
 
+def test_drawing_to_shape_distinguishes_curated_from_extracted():
+    """Regression for the curated-vs-extracted mislabeling gap: a
+    human-curated drawing's fields get 'curated:' source_refs, an
+    auto-extracted one gets 'extracted:' -- never the same tag for both."""
+    from src.agent.shapes import drawing_to_shape
+
+    curated_drawing = {
+        "drawing_id": "D-012", "subsystem": "Recoater", "source_path": "x",
+        "file_path": "y", "distribution": "clean", "pages": 1,
+        "title": "Recoater Mount Block", "material": "Aluminium",
+        "bom_match": "Recoater mount block", "match_status": "verified",
+        "curation_source": "human",
+    }
+    extracted_drawing = {**curated_drawing, "drawing_id": "D-013", "curation_source": "auto_extraction"}
+
+    curated_shape = drawing_to_shape(curated_drawing)
+    extracted_shape = drawing_to_shape(extracted_drawing)
+
+    assert curated_shape["fields"]["title"]["source_ref"] == "curated:D-012"
+    assert extracted_shape["fields"]["title"]["source_ref"] == "extracted:D-013"
+
+
 def test_get_drawing_resolves_by_title_not_just_id():
     """Regression for a real gap: README's own demo script asks about
     drawings by title ('Bygge Base Ring', 'Recoater Linear Plate') --
