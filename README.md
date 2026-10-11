@@ -982,9 +982,17 @@ Representative outputs are saved in `screenshots/`:
 - `02_recoater_mount_block_3d.png`
 - `03_build_plate_drawing.png`
 - `04_build_plate_3d.png`
-- `05_bygge_base_ring_drawing.png`
+- `05_bygge_base_ring_drawing.png` — refreshed 2026-10-11, now the real
+  agent resolving "Bygge Base Ring" **by title**, not just a static crop
+  (see the `get_drawing` title-fallback fix in Known Limitations)
 - `06_bygge_base_ring_3d.png`
-- `07_d014_uncertainty.png`
+- `07_d014_uncertainty.png` — refreshed 2026-10-11 against the real agent;
+  same unverified-identity case (D-014), same warning banner, now live
+- `12_drawing_link_by_part_name.png` — chat-drives-the-visual (requirement
+  #3) for a real BOM part name whose drawing is `unverified`, not
+  `verified` — confirms the `find_drawing_for_part` fix (Known
+  Limitations) actually opens the drawing + shows the identity warning,
+  not just the text answer
 - `08a_correction_baseline_before.png` — chat-grounded answer before any
   correction (material: Aluminium, each claim individually cited)
 - `08b_correction_chat_proposal.png` — the required flow's actual first
