@@ -91,6 +91,62 @@ The backend for the knowledge-graph bonus already exists
 
 ---
 
+## 2026-10-11 fix pass (two fresh-context audits + AGY's own adversarial pass)
+
+All independently verified against the real code/data before fixing, not
+taken on faith. `pytest`: 57 → 59 passed over this pass (was 43 at the
+end of B0–B7).
+
+- **The most critical one:** the citation validator checked a
+  `(entity_id, field, value, source_ref)` tuple, but `_render()` was
+  joining a SEPARATE model-authored `statement` field the validator never
+  touched — a claim could carry a fabricated sentence next to a correctly
+  grounded value and still render as "verified." Fixed by removing the
+  free-text channel entirely; prose is now built from a deterministic
+  per-field template over the validated tuple. No model sentence reaches
+  the user unchecked, anywhere, now.
+- `find_drawing_for_part` only matched `match_status == "verified"` —
+  confirmed only 2 of 30 drawings qualified, so asking about almost any
+  part by name never opened its drawing (requirement #3, broken for
+  ~190/192 parts). Now also accepts `"unverified"`.
+- `search_parts` never checked `supplier` at all (178/192 parts have
+  one) and matched against the raw BOM dict instead of the
+  corrections-overlaid shape. Both fixed.
+- The claims-first fix above also silently removed the only place a
+  procurement/temporal caveat could live — added back as a deterministic
+  append (cost/supplier claims only), not model text.
+- **Real runtime Gemini→Groq failover** (`run_turn_with_failover` in
+  `chat_agent.py`) — previously `AGENT_PROVIDER` was read once at
+  startup, so hitting Gemini's real 20-req/day cap meant stopping the
+  process and editing `.env`. This was hit *live* during this session's
+  own testing, not hypothetically. Composes the existing, untouched
+  `GeminiProvider`/`GroqProvider` — catches only the specific
+  `GeminiQuotaExhausted` signal, never a bare except, so a real bug in
+  Gemini still surfaces instead of being masked.
+- `get_drawing` now also resolves by exact title (not just ID) — the
+  README's own demo questions naming "Bygge Base Ring" / "Recoater Linear
+  Plate" by title had no resolution path before this.
+- Drawing citations now distinguish `curated:` (the 4 human-reviewed
+  drawings) from `extracted:` (the 26 via B5, unreviewed) — they used to
+  render identically, falsely implying human review for raw extraction
+  output.
+- The chat-side correction regex had a stale-overlay bug (proposing a
+  second correction on an already-corrected part recorded the pre-
+  correction value as `current_value`) — fixed. The regex itself stays as
+  a deliberate, disclosed design choice, not replaced with a
+  `propose_correction` tool — that redesign was considered and explicitly
+  deferred (Oji's call, scope/time tradeoff), not an oversight.
+- **Still deferred, not forgotten:** `DIMENSION_TOLERANCE` in
+  `self_consistency.py` (0.05/5%) — a real engineering-judgment tradeoff
+  (tighter tolerance means less 3D coverage, not a pure improvement) that
+  needs its own empirical check against real drawings before touching;
+  `get_interfaces`/`get_interface_network` silently dropping
+  `unresolved_interfaces` from their output — confirmed zero live-data
+  impact today (no node in the real graph currently has one), so low
+  priority, but the description/implementation mismatch is real.
+
+---
+
 ## What's genuinely not done / rough edges, not hidden
 
 - **CadQuery only covers `box`/`cylinder`/`ring`.** Drawings whose
