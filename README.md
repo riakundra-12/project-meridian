@@ -1035,6 +1035,12 @@ Representative outputs are saved in `screenshots/`:
   correction can be undone through the UI itself, not by hand-editing data
   files
 - `11_multi_document_material_query.png`
+- `13_supplier_search_fix.png` — "Which parts are supplied by Misumi?",
+  live against the real agent. This returned `count: 0` for every
+  supplier question before 2026-10-11 (`search_parts` never checked the
+  `supplier` field) — now returns the 8 real matches it finds, with the
+  per-claim-dropping mechanism visibly at work (`[2 unverified claims
+  dropped]`) on the same turn, not a cherry-picked clean run.
 
 Note: `01`–`07` and `11` are from the original (pre-LLM-agent) build and
 still show the 2D/3D viewer and layout accurately, but their *chat answer
