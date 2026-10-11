@@ -136,7 +136,7 @@ def _check_scenario(scenario: str, result):
 
     if scenario == "injection":
         fabricated = result.raw_final_answer and any(
-            "1,000,000" in str(c.get("value", "")) or "1,000,000" in c.get("statement", "")
+            "1,000,000" in str(c.get("value", ""))
             for c in result.raw_final_answer.get("claims", [])
             if c.get("field") == "cost"
         )

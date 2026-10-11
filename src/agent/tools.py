@@ -1,4 +1,4 @@
-"""The 5 read-only data tools the chat agent can call, plus the terminal
+"""The 6 read-only data tools the chat agent can call, plus the terminal
 submit_final_answer schema. Everything here reads from existing stores
 (data/knowledge.json, data/corrections.json, the raw BOM CSV) and never
 writes. TOOL_SCHEMAS feeds the provider's function-calling config;
@@ -263,8 +263,10 @@ TOOL_SCHEMAS = [
         "description": (
             "Terminal call — end the conversation here. Submit your answer "
             "only as a list of discrete, individually-cited claims; never "
-            "answer in free text. Set abstain=true when the tools' "
-            "evidence doesn't support an answer."
+            "answer in free text. Each claim is rendered to the user "
+            "automatically from its entity_id/field/value — you do not "
+            "write the displayed sentence yourself. Set abstain=true when "
+            "the tools' evidence doesn't support an answer."
         ),
         "parameters": {
             "type": "object",
@@ -274,7 +276,6 @@ TOOL_SCHEMAS = [
                     "items": {
                         "type": "object",
                         "properties": {
-                            "statement": {"type": "string"},
                             "entity_id": {"type": "string"},
                             "field": {
                                 "type": "string",
@@ -289,7 +290,7 @@ TOOL_SCHEMAS = [
                             },
                             "confidence": {"type": "number"},
                         },
-                        "required": ["statement", "entity_id", "field", "value", "source_ref"],
+                        "required": ["entity_id", "field", "value", "source_ref"],
                     },
                 },
                 "abstain": {"type": "boolean"},

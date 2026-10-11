@@ -151,7 +151,6 @@ MOCK_SCRIPTS = {
             "args": {
                 "claims": [
                     {
-                        "statement": "Front Door interfaces with Front Side Box.",
                         "entity_id": "Front Door",
                         "field": "interfaces",
                         "value": [{"target": "Front Side Box", "resolved": True}],
@@ -159,7 +158,6 @@ MOCK_SCRIPTS = {
                         "confidence": 1.0,
                     },
                     {
-                        "statement": "Front Side Box belongs to the Box subsystem.",
                         "entity_id": "Front Side Box",
                         "field": "subsystem",
                         "value": "Box",
@@ -178,7 +176,6 @@ MOCK_SCRIPTS = {
             "args": {
                 "claims": [
                     {
-                        "statement": "Front Door is made of Aluminium.",
                         "entity_id": "Front Door",
                         "field": "material",
                         "value": "Aluminium",
@@ -201,7 +198,6 @@ MOCK_SCRIPTS = {
             "args": {
                 "claims": [
                     {
-                        "statement": "Left Side Box interfaces with Back Box.",
                         "entity_id": "Left Side Box",
                         "field": "interfaces",
                         "value": [
@@ -214,7 +210,6 @@ MOCK_SCRIPTS = {
                         "confidence": 1.0,
                     },
                     {
-                        "statement": "Back Box interfaces back with Left Side Box, confirming the cycle.",
                         "entity_id": "Back Box",
                         "field": "interfaces",
                         "value": [
@@ -237,7 +232,6 @@ MOCK_SCRIPTS = {
             "args": {
                 "claims": [
                     {
-                        "statement": "Front Door uses Aluminium.",
                         "entity_id": "Front Door",
                         "field": "material",
                         "value": "Aluminium",
@@ -245,7 +239,6 @@ MOCK_SCRIPTS = {
                         "confidence": 1.0,
                     },
                     {
-                        "statement": "Print Platform uses Aluminium.",
                         "entity_id": "Print Platform",
                         "field": "material",
                         "value": "Aluminium",

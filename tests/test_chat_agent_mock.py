@@ -33,14 +33,37 @@ def test_sanity1_single_hop_scenario():
 
 
 def test_rendered_answer_shows_the_citation_inline():
-    """The validator checking a citation internally is not the same as the
-    user ever SEEING it -- caught in review: _render used to join only
-    claim statements, with no visible source_ref anywhere in the chat
-    text. Each claim's citation must now appear inline."""
+    """The validator checking a claim internally is not the same as the
+    user ever SEEING its source -- caught in review: _render used to join
+    only claim text, with no visible source_ref anywhere in the chat text.
+    Each claim's citation must now appear inline."""
     provider = build_provider("mock", scenario="sanity1")
     result = run_turn(provider, "What material is the Front Door made of?")
 
     assert "BOM row 9" in result.rendered_text
+
+
+def test_render_is_templated_not_model_authored():
+    """Regression for the critical gap a fresh-context audit caught: claims
+    used to carry a model-authored free-text 'statement' field that
+    _render() joined verbatim, while validate_claims() only ever checked
+    (entity_id, field, value, source_ref) -- a claim could carry a
+    fabricated statement alongside a correctly-grounded value/source_ref
+    pair and still render as if fully verified. Fixed by removing the
+    free-text channel entirely: prose is now built purely from the
+    validated (entity_id, field, value) tuple via _claim_sentence(). This
+    claim deliberately has no 'statement' key and carries an unrelated
+    extra key, to prove neither is read."""
+    from src.agent.chat_agent import _claim_sentence
+
+    claim = {
+        "entity_id": "Front Door",
+        "field": "material",
+        "value": "Aluminium",
+        "source_ref": "BOM row 9",
+        "unrelated_extra_key": "anything else the model sends is irrelevant",
+    }
+    assert _claim_sentence(claim) == "Front Door is made of Aluminium."
 
 
 def test_correction_citation_renders_as_accepted_correction():

@@ -48,11 +48,41 @@ def _format_citation(source_ref: str) -> str:
     return source_ref  # "BOM row N" already reads fine as-is
 
 
+_FIELD_TEMPLATES = {
+    "material": "{entity} is made of {value}.",
+    "subsystem": "{entity} belongs to the {value} subsystem.",
+    "supplier": "{entity}'s recorded supplier is {value}.",
+    "cost": "{entity}'s recorded cost is {value}.",
+    "type": "{entity}'s recorded type is {value}.",
+    "amount": "{entity}'s recorded amount is {value}.",
+    "interfaces": "{entity} interfaces with: {value}.",
+    "title": "{entity}'s title is {value}.",
+    "distribution": "{entity}'s source quality is {value}.",
+    "match_status": "{entity}'s BOM link status is {value}.",
+    "bom_match": "{entity}'s candidate BOM match is {value}.",
+}
+
+
+def _claim_sentence(claim: dict) -> str:
+    """Builds the user-facing sentence from ONLY the already-validated
+    (entity_id, field, value) tuple — never model-authored text. This is
+    the fix for the gap a fresh-context audit caught: a prior version let
+    the model write its own free-text 'statement' per claim, which the
+    validator never actually checked against 'value', so a claim could
+    carry a correct, grounded value/source_ref pair alongside a fabricated
+    sentence and still render as if fully verified. There is no free-text
+    channel left for that to happen through now."""
+    template = _FIELD_TEMPLATES.get(
+        claim["field"], "{entity}.{field} = {value}."
+    )
+    return template.format(entity=claim["entity_id"], field=claim["field"], value=claim["value"])
+
+
 def _render(validated_claims: list, model_abstained: bool) -> str:
     if not validated_claims:
         return "I don't have grounded data to answer that."
     text = " ".join(
-        f"{c['statement']} _[{_format_citation(c['source_ref'])}]_"
+        f"{_claim_sentence(c)} _[{_format_citation(c['source_ref'])}]_"
         for c in validated_claims
     )
     if model_abstained:

@@ -19,7 +19,6 @@ def test_correct_claim_passes():
     record_grounded_facts(grounded, get_part("Front Door"))
 
     claim = {
-        "statement": "Front Door is made of Aluminium.",
         "entity_id": "Front Door",
         "field": "material",
         "value": "Aluminium",
@@ -38,7 +37,6 @@ def test_wrong_value_on_correct_field_fails():
     record_grounded_facts(grounded, get_part("Front Door"))
 
     claim = {
-        "statement": "Front Door is made of Steel.",
         "entity_id": "Front Door",
         "field": "material",
         "value": "Steel",  # real value is "Aluminium"
@@ -56,7 +54,6 @@ def test_pure_hallucination_fails():
     record_grounded_facts(grounded, get_part("Front Door"))
 
     claim = {
-        "statement": "Front Door costs $9999.",
         "entity_id": "Front Door",
         "field": "cost",  # never looked up / not present in this part's evidence
         "value": "$9999",
@@ -77,7 +74,6 @@ def test_stale_post_correction_citation_fails():
     grounded = {("Front Door", "material"): ("Titanium", "correction:proposal-7")}
 
     claim = {
-        "statement": "Front Door is made of Aluminium.",
         "entity_id": "Front Door",
         "field": "material",
         "value": "Aluminium",  # the stale, pre-correction value
@@ -102,9 +98,9 @@ def test_later_tool_call_supersedes_earlier_one():
         "fields": {"material": {"value": "Titanium", "source_ref": "correction:proposal-7", "confidence": 1.0}},
     }})
 
-    stale_claim = {"statement": "x", "entity_id": "Front Door", "field": "material",
+    stale_claim = {"entity_id": "Front Door", "field": "material",
                    "value": "Aluminium", "source_ref": "BOM row 9"}
-    current_claim = {"statement": "x", "entity_id": "Front Door", "field": "material",
+    current_claim = {"entity_id": "Front Door", "field": "material",
                       "value": "Titanium", "source_ref": "correction:proposal-7"}
 
     validated, dropped = validate_claims([stale_claim, current_claim], grounded)
@@ -124,7 +120,6 @@ def test_cross_entity_citation_fails_even_with_correct_value():
     record_grounded_facts(grounded, get_part("Front Side Box"))
 
     claim = {
-        "statement": "Front Door belongs to the Box subsystem.",
         "entity_id": "Front Door",
         "field": "subsystem",
         "value": "Box",  # correct value
@@ -146,7 +141,6 @@ def test_search_parts_aggregation_claim_validates():
     record_grounded_facts(grounded, search_parts("Aluminium"))
 
     claim = {
-        "statement": "Front Door uses Aluminium.",
         "entity_id": "Front Door",
         "field": "material",
         "value": "Aluminium",
@@ -177,7 +171,6 @@ def test_stringified_list_value_still_validates():
     }})
 
     claim = {
-        "statement": "The Front Door interfaces with the Front Side Box.",
         "entity_id": "Front Door",
         "field": "interfaces",
         "value": "[{'resolved': True, 'target': 'Front Side Box'}]",  # verbatim from the real transcript
