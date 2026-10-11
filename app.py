@@ -19,6 +19,7 @@ from src.corrections.store import (
     get_pending_proposals,
     accept_proposal,
     reject_proposal,
+    revert_correction,
     get_history,
 )
 from src.agent.chat_agent import run_turn
@@ -460,7 +461,7 @@ else:
                     reject_proposal(proposal["id"])
                     st.warning("Correction rejected.")
                     st.rerun()
-def _render_history_card(item: dict) -> None:
+def _render_history_card(item: dict, allow_revert: bool = False) -> None:
     with st.container(border=True):
         st.markdown(f"**{item['id']} — {item['part_name']}**")
         st.caption(
@@ -471,6 +472,17 @@ def _render_history_card(item: dict) -> None:
             f"{item['field']}: **{item['current_value']}** → "
             f"**{item['proposed_value']}** _[{item['source_ref']}]_"
         )
+        if item.get("reverted_at"):
+            st.caption(f"Reverted {item['reverted_at']}")
+        if allow_revert and st.button(
+            "Revert",
+            key=f"revert-{item['id']}",
+            help="Moves this back to rejected — e.g. if the acceptance "
+                 "is later found to rest on a bad match.",
+        ):
+            revert_correction(item["id"])
+            st.warning(f"{item['id']} reverted.")
+            st.rerun()
 
 
 with st.expander("Correction history"):
@@ -479,7 +491,7 @@ with st.expander("Correction history"):
     st.markdown("#### Accepted")
     if history["accepted"]:
         for item in history["accepted"]:
-            _render_history_card(item)
+            _render_history_card(item, allow_revert=True)
     else:
         st.write("None")
 

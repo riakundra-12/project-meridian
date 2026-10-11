@@ -103,6 +103,36 @@ def reject_proposal(proposal_id):
     return rejected
 
 
+def revert_correction(proposal_id, note=None):
+    """Moves an ACCEPTED proposal back into 'rejected', stamped with a
+    reverted_at timestamp and an optional note. Previously the only way to
+    undo a wrongly-accepted correction was hand-editing data/corrections.json
+    directly (see proposal-3's git history) -- this is that same operation,
+    through real code, so it's reproducible and doesn't require touching
+    the JSON file by hand. Mirrors accept_proposal/reject_proposal's
+    find-and-move pattern exactly; no new store shape."""
+    store = _load_store()
+
+    remaining = []
+    reverted = None
+
+    for item in store["accepted"]:
+        if item["id"] == proposal_id:
+            item["status"] = "rejected"
+            item["reverted_at"] = datetime.now(timezone.utc).isoformat()
+            if note:
+                item["note"] = note
+            reverted = item
+            store["rejected"].append(item)
+        else:
+            remaining.append(item)
+
+    store["accepted"] = remaining
+    _save_store(store)
+
+    return reverted
+
+
 def get_accepted_value(part_name, field):
     store = _load_store()
 
