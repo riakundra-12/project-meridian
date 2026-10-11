@@ -79,6 +79,14 @@ def _claim_sentence(claim: dict) -> str:
     return template.format(entity=claim["entity_id"], field=claim["field"], value=claim["value"])
 
 
+_PROCUREMENT_CAVEAT_FIELDS = {"cost", "supplier"}
+_PROCUREMENT_CAVEAT = (
+    "\n\n_Recorded cost and supplier values are from the pinned BOM "
+    "snapshot, not a live procurement quote or confirmation of current "
+    "availability._"
+)
+
+
 def _render(validated_claims: list, model_abstained: bool) -> str:
     if not validated_claims:
         return "I don't have grounded data to answer that."
@@ -86,6 +94,13 @@ def _render(validated_claims: list, model_abstained: bool) -> str:
         f"{_claim_sentence(c)} _[{_format_citation(c['source_ref'])}]_"
         for c in validated_claims
     )
+    if any(c["field"] in _PROCUREMENT_CAVEAT_FIELDS for c in validated_claims):
+        # Confirmed real gap (AGY audit, 2026-10-11): removing the model's
+        # free-text channel (the claims-first fix) also removed the only
+        # place a caveat like this could have lived -- the brief explicitly
+        # wants cost/supplier distinguished from current availability, and
+        # nothing rendered that anywhere once _render became pure template.
+        text += _PROCUREMENT_CAVEAT
     if model_abstained:
         # The model itself flagged low confidence even though some claims
         # independently validated — surface that rather than silently
@@ -160,3 +175,42 @@ def run_turn(provider, user_query: str, max_turns: int = MAX_TURNS) -> TurnResul
         abstain=True,
         transcript_turns=transcript_turns,
     )
+
+
+def run_turn_with_failover(primary, fallback, user_query: str, already_switched: bool = False,
+                            max_turns: int = MAX_TURNS) -> tuple:
+    """Thin composition over run_turn() -- SUP-001: Gemini's confirmed real
+    20-requests/day-per-model ceiling (hit live during testing, not
+    hypothetical) has no runtime recovery today; AGENT_PROVIDER is read
+    once at process startup, so hitting the cap mid-demo means stopping
+    the app and editing .env. This fixes that without touching
+    GeminiProvider/GroqProvider internals -- both are already real and
+    tested, this only composes them.
+
+    Catches ONLY GeminiQuotaExhausted, the specific daily-quota signal
+    gemini_retry.py raises -- not a bare except, so a real bug in primary
+    still surfaces instead of silently always falling through to fallback.
+    Once switched, callers should pass already_switched=True on later
+    turns so the session doesn't re-attempt a primary that's guaranteed to
+    fail again before its quota resets.
+
+    Returns (TurnResult, switched: bool) -- the caller (app.py) persists
+    `switched` in st.session_state and surfaces a visible notice the turn
+    it flips, so a provider change is never silent to whoever's watching.
+    """
+    from src.agent.gemini_retry import GeminiQuotaExhausted
+
+    if already_switched or primary is None:
+        if fallback is None:
+            raise RuntimeError(
+                "No chat provider available: primary is unset or already "
+                "failed over, and no fallback is configured (set GROQ_API_KEY)."
+            )
+        return run_turn(fallback, user_query, max_turns), True
+
+    try:
+        return run_turn(primary, user_query, max_turns), False
+    except GeminiQuotaExhausted:
+        if fallback is None:
+            raise
+        return run_turn(fallback, user_query, max_turns), True

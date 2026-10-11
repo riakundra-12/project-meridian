@@ -62,30 +62,38 @@ def get_part(part_name: str) -> dict:
 
 
 def search_parts(query: str) -> dict:
-    """Matches on name, subsystem, OR material (case-insensitive substring)
-    so aggregation questions like "which parts use Aluminium" are
-    answerable — not just name/subsystem disambiguation. Returns the common
-    aggregation fields (subsystem, type, material, supplier, cost) per
-    match, not just name/subsystem, so each result is independently
-    citable without a follow-up get_part call per match.
+    """Matches on name, subsystem, material, OR supplier (case-insensitive
+    substring) so aggregation questions like "which parts use Aluminium"
+    or "which parts are supplied by Misumi" are both answerable. Returns
+    the common aggregation fields (subsystem, type, material, supplier,
+    cost) per match, not just name/subsystem, so each result is
+    independently citable without a follow-up get_part call per match.
+
+    Matches against the CORRECTIONS-OVERLAID shape, not the raw BOM dict
+    (confirmed real gap, AGY audit 2026-10-11: matching raw fields meant a
+    part corrected to a new value couldn't be found by that new value,
+    even though get_part already showed it) -- shaping every part is cheap
+    at this corpus size (192 rows).
+
+    Supplier matching was the other confirmed gap in the same audit: 178
+    of 192 parts have a recorded supplier and NONE of them were searchable
+    before this, since _matches never checked the field at all.
     """
     knowledge = _load_knowledge()
     q = query.lower()
 
-    def _matches(p: dict) -> bool:
-        if q in p["name"].lower():
-            return True
-        if p.get("subsystem") and q in p["subsystem"].lower():
-            return True
-        if p.get("material") and q in str(p["material"]).lower():
-            return True
+    def _matches(fields: dict) -> bool:
+        for key in ("name", "subsystem", "material", "supplier"):
+            value = fields.get(key, {}).get("value")
+            if value and q in str(value).lower():
+                return True
         return False
 
-    matches = [p for p in knowledge["parts"] if _matches(p)]
+    shaped = [_apply_corrections_overlay(part_to_shape(p)) for p in knowledge["parts"]]
+    matches = [shape for shape in shaped if _matches(shape["fields"])]
     truncated = len(matches) > 10
     results = []
-    for p in matches[:10]:
-        shape = _apply_corrections_overlay(part_to_shape(p))
+    for shape in matches[:10]:
         trimmed = {
             k: v
             for k, v in shape["fields"].items()
@@ -146,14 +154,16 @@ TOOL_SCHEMAS = [
     {
         "name": "search_parts",
         "description": (
-            "Search BOM parts by substring match on name, subsystem, OR "
-            "material (case-insensitive) — use this for aggregation "
-            "questions like 'which parts use X material' or 'which parts "
-            "are in the Y subsystem', not just name disambiguation. Returns "
-            "up to 10 matches, each with subsystem/type/material/supplier/"
-            "cost already included and independently citable — no need to "
-            "call get_part again for these fields. count/truncated tell "
-            "you if there were more than 10 real matches."
+            "Search BOM parts by substring match on name, subsystem, "
+            "material, OR supplier (case-insensitive) — use this for "
+            "aggregation questions like 'which parts use X material', "
+            "'which parts are in the Y subsystem', or 'which parts are "
+            "supplied by Z', not just name disambiguation. Matches reflect "
+            "any accepted correction. Returns up to 10 matches, each with "
+            "subsystem/type/material/supplier/cost already included and "
+            "independently citable — no need to call get_part again for "
+            "these fields. count/truncated tell you if there were more "
+            "than 10 real matches."
         ),
         "parameters": {
             "type": "object",

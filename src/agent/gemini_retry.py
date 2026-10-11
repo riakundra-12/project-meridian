@@ -12,6 +12,15 @@ MAX_ATTEMPTS = 6
 MAX_SLEEP_S = 60
 
 
+class GeminiQuotaExhausted(RuntimeError):
+    """Raised specifically when a 429's suggested retry delay exceeds
+    MAX_SLEEP_S -- the free tier's per-day cap, not per-minute throttling.
+    A distinct type (not bare RuntimeError) so callers (e.g. the
+    Gemini->Groq failover composition in chat_agent.py) can catch exactly
+    this signal and nothing else -- a real bug elsewhere in the call must
+    still surface normally, not get silently masked by a broad except."""
+
+
 def call_with_retry(call_fn, label: str = "gemini"):
     """call_fn: zero-arg callable that makes one real API call and returns
     the response, or raises. Retries transient failures (network stalls,
@@ -43,7 +52,7 @@ def call_with_retry(call_fn, label: str = "gemini"):
                 raise
             wait_s = _parse_retry_delay(e) or min(2 ** attempt, 20)
             if wait_s > MAX_SLEEP_S:
-                raise RuntimeError(
+                raise GeminiQuotaExhausted(
                     f"{label} quota exhausted with a {wait_s:.0f}s suggested "
                     f"retry delay (> {MAX_SLEEP_S}s ceiling) — this is the "
                     f"free tier's per-day cap, not per-minute throttling. "

@@ -152,6 +152,38 @@ def test_search_parts_aggregation_claim_validates():
     assert dropped == 0
 
 
+def test_search_parts_supplier_matching():
+    """Regression for a real gap caught in a 2026-10-11 audit: search_parts
+    never checked the supplier field at all -- 178/192 BOM parts have a
+    recorded supplier and NONE were searchable by it. 22 real parts use
+    Misumi; this must find all of them, not return count: 0."""
+    result = search_parts("Misumi")
+    assert result["count"] == 22
+    assert any(r["entity_id"] == "Front door hinge" for r in result["results"])
+
+
+def test_search_parts_reflects_accepted_corrections():
+    """Regression for the other half of the same gap: search_parts matched
+    on the RAW BOM dict, not the corrections-overlaid shape, so a part
+    corrected to a new value couldn't be found by that new value even
+    though get_part already showed it. Isolated per-test store (see
+    conftest.py) -- creates and accepts a real correction within this
+    test, doesn't rely on the live data/corrections.json."""
+    from src.corrections.store import create_proposal, accept_proposal
+
+    proposal = create_proposal(
+        part_name="Front Door",
+        field="material",
+        current_value="Aluminium",
+        proposed_value="Exotic Unobtainium Alloy",
+        source_ref="BOM row 9",
+    )
+    accept_proposal(proposal["id"])
+
+    result = search_parts("Exotic Unobtainium Alloy")
+    assert any(r["entity_id"] == "Front Door" for r in result["results"])
+
+
 def test_stringified_list_value_still_validates():
     """Regression test for a real failure observed live (2026-10-08,
     artifacts/b0_transcripts/primary_20261008T220525Z.json): Gemini

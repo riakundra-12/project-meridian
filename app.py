@@ -22,7 +22,7 @@ from src.corrections.store import (
     revert_correction,
     get_history,
 )
-from src.agent.chat_agent import run_turn
+from src.agent.chat_agent import run_turn_with_failover
 from src.agent.provider import build_provider
 
 load_dotenv()
@@ -61,13 +61,21 @@ def find_parts(parts, query):
 
 
 def find_drawing_for_part(drawings, part_name):
+    """Confirmed real (AGY audit, 2026-10-11): restricting this to
+    match_status == "verified" left only 2 of 30 drawings reachable by
+    asking about a part by name -- D-012 and D-026 -- breaking requirement
+    #3 for the other 190 BOM parts, including the 2 'unverified' drawings
+    that already have working warning-banner UI (render_drawing_evidence)
+    sitting unreachable behind this filter. 'unmatched'/no-link drawings
+    still correctly return None below -- there's genuinely no candidate
+    link to show for those, that's not a bug."""
     for drawing in drawings:
         bom_match = drawing.get("bom_match")
 
         if (
             bom_match
             and bom_match.lower() == part_name.lower()
-            and drawing.get("match_status") == "verified"
+            and drawing.get("match_status") in ("verified", "unverified")
         ):
             return drawing
 
@@ -198,6 +206,21 @@ def render_drawing_evidence(container, selected, selected_drawing):
                 )
 
 
+def _current_overlaid_value(part_name, field, raw_value):
+    """Confirmed real gap (AGY audit, 2026-10-11): this chat-side correction
+    path read the raw BOM value directly, so proposing a SECOND correction
+    on a part that already has an accepted one would record the ORIGINAL
+    pre-correction value as current_value in the new proposal's audit
+    trail -- stale data baked into a new record. tools.py's
+    _apply_corrections_overlay does the equivalent for the chat agent's
+    reads; this is the same resolution for this one call site, not a new
+    mechanism."""
+    for item in get_history().get("accepted", []):
+        if item.get("part_name", "").lower() == part_name.lower() and item.get("field") == field:
+            return item["proposed_value"]
+    return raw_value
+
+
 def parse_material_correction(prompt, parts):
     pattern = re.compile(
         r"(?:change|correct|update)\s+(?:the\s+)?material\s+(?:of|for)\s+(.+?)\s+to\s+(.+)",
@@ -255,8 +278,23 @@ except Exception as e:
     provider = None
     provider_error = str(e)
 
+# SUP-001: Gemini's real, confirmed 20-req/day-per-model ceiling has no
+# runtime recovery otherwise -- AGENT_PROVIDER is read once at process
+# startup. Only wire a fallback when the primary is actually gemini; an
+# explicit AGENT_PROVIDER=groq/mock/hf keeps meaning exactly that provider,
+# no silent substitution.
+fallback_provider = None
+if AGENT_PROVIDER == "gemini":
+    try:
+        fallback_provider = _get_provider("groq")
+    except Exception:
+        fallback_provider = None  # no GROQ_API_KEY configured -- fine, just no safety net
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if "provider_switched" not in st.session_state:
+    st.session_state.provider_switched = False
 
 if "selected_part" not in st.session_state:
     st.session_state.selected_part = None
@@ -301,10 +339,11 @@ with left:
             part = correction["part"]
             proposed_material = correction["proposed_material"]
 
+            current_material = _current_overlaid_value(part["name"], "material", part["material"])
             proposal = create_proposal(
                 part_name=part["name"],
                 field="material",
-                current_value=part["material"],
+                current_value=current_material,
                 proposed_value=proposed_material,
                 source_ref=f"BOM row {part['bom_row']}",
             )
@@ -313,7 +352,7 @@ with left:
                 f"I created correction proposal **{proposal['id']}**.\n\n"
                 f"- Part: **{part['name']}**\n"
                 f"- Field: material\n"
-                f"- Current source value: **{part['material']}**\n"
+                f"- Current source value: **{current_material}**\n"
                 f"- Proposed value: **{proposed_material}**\n\n"
                 "The source evidence has not been changed. "
                 "A human must accept or reject this proposal in the review panel."
@@ -343,7 +382,16 @@ with left:
             else:
                 try:
                     with st.spinner("Thinking — calling tools..."):
-                        agent_result = run_turn(provider, prompt)
+                        agent_result, switched = run_turn_with_failover(
+                            provider, fallback_provider, prompt,
+                            already_switched=st.session_state.provider_switched,
+                        )
+                    if switched and not st.session_state.provider_switched:
+                        st.warning(
+                            "Gemini's daily quota was reached — switched to "
+                            "Groq for this and future questions this session."
+                        )
+                    st.session_state.provider_switched = switched
                 except Exception as e:
                     response = f"⚠️ Chat agent call failed: {e}"
 

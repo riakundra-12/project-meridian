@@ -78,6 +78,29 @@ def test_correction_citation_renders_as_accepted_correction():
     assert _format_citation("BOM row 9") == "BOM row 9"
 
 
+def test_cost_claim_renders_procurement_caveat():
+    """Regression for a gap the claims-first fix (Phase 1) introduced:
+    removing all model-authored free text also removed the only place a
+    temporal/procurement caveat could live. The brief explicitly wants
+    cost/supplier distinguished from current availability -- nothing
+    rendered that anywhere until this was added back as a deterministic
+    append, not model text."""
+    from src.agent.chat_agent import _render
+
+    claim = {"entity_id": "Front Door", "field": "cost", "value": "DKK100.00", "source_ref": "BOM row 9"}
+    text = _render([claim], False)
+    assert "pinned BOM snapshot" in text
+    assert "not a live procurement quote" in text
+
+
+def test_non_procurement_claim_has_no_caveat():
+    from src.agent.chat_agent import _render
+
+    claim = {"entity_id": "Front Door", "field": "material", "value": "Aluminium", "source_ref": "BOM row 9"}
+    text = _render([claim], False)
+    assert "pinned BOM snapshot" not in text
+
+
 def test_aggregation_scenario():
     """Regression for the search_parts material-matching gap (see
     test_validator.py::test_search_parts_aggregation_claim_validates) —
